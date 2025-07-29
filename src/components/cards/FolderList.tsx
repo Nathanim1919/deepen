@@ -28,14 +28,14 @@ export const FolderList: React.FC = () => {
     <AnimatePresence>
       {isFolderListOpen && (
         <motion.div
-          className="fixed inset-0 z-[1000] flex items-start justify-end p-4 pt-20"
+          className="fixed inset-0 z-[1000] flex items-start justify-end p-4 pt-13"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={() => setIsFolderListOpen?.(false)}
         >
           <motion.div
-            className="flex flex-col w-72 bg-white dark:bg-[#1e1e1e] rounded-xl border border-gray-300 dark:border-[#2e2e2e] shadow-2xl overflow-hidden"
+            className="flex flex-col w-72 bg-white dark:bg-[#1e1e1e] rounded-xl border border-gray-400 dark:border-[#262626] shadow-2xl overflow-hidden"
             initial={{ scale: 0.95, opacity: 0, y: -20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: -20 }}
@@ -47,7 +47,7 @@ export const FolderList: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header with subtle gradient */}
-            <div className="p-4 border-b border-gray-200 dark:border-[#2e2e2e] bg-gradient-to-b dark:from-[#1e1e1e] dark:to-[#1a1a1a]">
+            <div className="p-4 border-b border-gray-200 dark:border-[#292828] bg-gradient-to-b dark:from-[#1e1e1e] dark:to-[#1a1a1a]">
               <h3 className="font-medium text-[15px] text-black dark:text-gray-200 flex items-center gap-2">
                 <RiFolderAddLine className="text-blue-500" />
                 <span>Add to Collection</span>
@@ -109,7 +109,7 @@ export const FolderList: React.FC = () => {
                       },
                     }}
                     whileTap={{ backgroundColor: "rgba(255,255,255,0.05)" }}
-                    className="px-4 py-2 cursor-pointer active:bg-[#2a2a2a] transition-colors border-b border-gray-200 dark:border-gray-800 hover:bg-gray-100 hover:dark:bg-[#212121]"
+                    className="px-4 py-2 cursor-pointer active:bg-[#2a2a2a] transition-colors  hover:bg-gray-100 hover:dark:bg-[#212121]"
                     onClick={() => setCaptureFolder(folder._id)}
                   >
                     <div className="flex items-center justify-between">
