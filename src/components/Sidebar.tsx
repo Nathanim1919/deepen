@@ -5,8 +5,6 @@ import { LuFolderOpen } from "react-icons/lu";
 import { FaRegUserCircle } from "react-icons/fa";
 import {
   Brain,
-  Moon,
-  Sun,
   PanelRightClose,
   PanelRightOpen,
 } from "lucide-react";
@@ -53,7 +51,7 @@ const Sidebar: React.FC<{
     token: string;
   };
 }> = ({ user, hideSidebar, setHideSidebar }) => {
-  const { collapsed, setCollapsed, setTheme, theme } = useUI();
+  const { collapsed, setCollapsed} = useUI();
 
   return (
     <motion.div
@@ -139,12 +137,12 @@ const Sidebar: React.FC<{
           path="/profile"
           collapsed={collapsed}
         />
-          <SidebarItem
+          {/* <SidebarItem
             icon={theme === "dark" ? <Moon size={20} /> : <Sun size={20} />}
             label={theme === "dark" ? "Dark" : "Light"}
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             collapsed={collapsed}
-          />
+          /> */}
       </div>
     </motion.div>
   );

@@ -25,7 +25,6 @@ const filterIcons = {
   bookmarks: <CiBookmark className="text-amber-400" />,
 } as const;
 
-
 function useIsSmallScreen(breakpoint = 640) {
   const [isSmall, setIsSmall] = useState(() => window.innerWidth < breakpoint);
 
@@ -54,13 +53,12 @@ const NotesList: React.FC<NotesListProps> = ({
   const targetId = folderId || sourceId || null;
   const isSmallScreen = useIsSmallScreen();
 
-
   const handleCaptureClick = () => {
     if (isSmallScreen) {
-     setMiddlePanelCollapsed(true);
-     setCollapsed(true);
+      setMiddlePanelCollapsed(true);
+      setCollapsed(true);
     }
-  }
+  };
 
   useEffect(() => {
     const loadCaptures = async () => {
@@ -77,7 +75,6 @@ const NotesList: React.FC<NotesListProps> = ({
     };
     loadCaptures();
   }, [filter, targetId, fetchCaptures]);
-
 
   const safeCaptures = useMemo(() => {
     if (!Array.isArray(captures)) return [];
