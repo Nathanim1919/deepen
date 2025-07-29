@@ -1,3 +1,4 @@
+
 import { PROCESSING_STATUS, type Capture } from "../types/Capture";
 import { NoteHeader } from "./noteview/NoteHeader";
 import { NoteMetaBox } from "./noteview/NoteMetaAccordion";
@@ -23,7 +24,6 @@ import React from "react";
 import HeadingOutline from "./HeadingOutline";
 import { AIbuttons } from "./buttons/AIbutton";
 import { toast } from "sonner";
-import { CaptureService } from "../api/capture.api";
 
 interface NoteViewProps {
   capture: Capture;
@@ -47,11 +47,18 @@ const NoteView: React.FC<NoteViewProps> = ({ capture }) => {
     generateCaptureSummary,
     loadingSummary,
     reProcessCapture,
-    loading
+    loading,
   } = useCaptureContext();
   const [hasApiKey, setHasApiKey] = useState<boolean>(false);
+  const [bookmarked, setBookmarked] = useState(capture.bookmarked);
+  const [isBookmarking, setIsBookmarking] = useState(false); // New loading state
+
   const { setSelectedFolder } = useFolderContext();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setBookmarked(capture.bookmarked);
+  }, [capture]);
 
   useEffect(() => {
     const checkApiKey = async () => {
@@ -60,6 +67,22 @@ const NoteView: React.FC<NoteViewProps> = ({ capture }) => {
     };
     checkApiKey();
   }, []);
+
+  const handleBookmark = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isBookmarking) return; // Prevent multiple clicks
+    setIsBookmarking(true);
+    const newBookmarkState = !bookmarked;
+    setBookmarked(newBookmarkState); // Optimistic update
+    try {
+      await bookmarkCapture?.(capture._id);
+    } catch {
+      setBookmarked(!newBookmarkState); // Revert on error
+      toast.error("Failed to update bookmark. Please try again.");
+    } finally {
+      setIsBookmarking(false);
+    }
+  };
 
   const handleOpenChat = () => {
     if (!hasApiKey) {
@@ -82,13 +105,13 @@ const NoteView: React.FC<NoteViewProps> = ({ capture }) => {
     : "w-[90%] md:w-[80%]";
 
   return (
-    <div className="flex relative flex-col h-full overflow-hidden bg-[#f7f0f0] dark:bg-[#0a0a0a]">
+    <div className="flex relative flex-col h-full overflow-hidden bg-gray-100 dark:bg-[#111111]">
       <div className="relative">
         <FolderList />
       </div>
 
-      {/* Header with refined design */}
-      <div className="sticky top-0 py-2 z-10 dark:bg-[#171717] backdrop-blur-2xl px-6 md:py-2">
+      {/* Header with Apple-inspired design */}
+      <div className="sticky top-0 z-10 bg-white/80 dark:bg-[#1b1a1a] backdrop-blur-xl px-4 py-2 shadow-sm">
         <div className="flex items-center justify-between">
           {/* Breadcrumb Navigation */}
           <div className="flex items-center overflow-hidden">
@@ -105,43 +128,41 @@ const NoteView: React.FC<NoteViewProps> = ({ capture }) => {
                     });
                     setMiddlePanelCollapsed(false);
                   }}
-                  className="flex items-center gap-1.5 group"
+                  className="flex items-center gap-2 group"
                 >
-                  <FiFolder className="text-blue-500 flex-shrink-0" />
-                  <span className="text-sm font-medium text-black dark:text-gray-300 group-hover:text-blue-500 truncate max-w-[120px] transition-colors duration-200">
+                  <FiFolder className="text-blue-500 flex-shrink-0 w-5 h-5" />
+                  <span className="text-sm font-semibold text-gray-900 dark:text-gray-200 group-hover:text-blue-500 truncate max-w-[140px] transition-colors duration-200">
                     {capture.collection.name}
                   </span>
                 </Link>
-                <FiChevronRight className="text-gray-400 dark:text-gray-500/70 mx-1 flex-shrink-0" />
+                <FiChevronRight className="text-gray-400 dark:text-gray-500 mx-2 flex-shrink-0 w-4 h-4" />
               </>
             )}
-            <div className="flex items-center gap-1.5">
-              <FiFileText className="text-amber-500 flex-shrink-0" />
-              <span className="text-sm font-medium text-black/60 dark:text-gray-500 truncate max-w-[180px]">
+            <div className="flex items-center gap-2">
+              <FiFileText className="text-amber-500 flex-shrink-0 w-5 h-5" />
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400 truncate max-w-[200px]">
                 {capture.title}
               </span>
             </div>
           </div>
 
           {/* Primary Action Buttons */}
-          <div className="flex items-center md:gap-2">
+          <div className="flex items-center gap-1">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={(e) => {
-                e.preventDefault();
-                bookmarkCapture?.(capture._id);
-              }}
-              className={`p-2 cursor-pointer rounded-lg transition-all flex items-center gap-1 ${
-                capture.bookmarked
-                  ? "bg-amber-100/50 dark:bg-amber-900/10 text-amber-500"
-                  : "text-gray-500 hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
-              }`}
-              title={capture.bookmarked ? "Remove bookmark" : "Add bookmark"}
+              onClick={handleBookmark}
+              disabled={isBookmarking}
+              className={`py-1 px-2 border border-gray-800 rounded-full flex items-center gap-1 transition-all duration-200 ${
+                bookmarked
+                  ? "bg-amber-100/80 dark:bg-amber-900/30 text-amber-500"
+                  : "bg-gray-100/80 dark:bg-gray-800/50 text-gray-500 hover:bg-gray-200/80 dark:hover:bg-gray-700/50 cursor-pointer"
+              } ${isBookmarking ? "opacity-50 cursor-not-allowed" : ""}`}
+              title={bookmarked ? "Remove bookmark" : "Add bookmark"}
             >
-              <FiBookmark className="w-4 h-4" />
-              <span className="text-xs font-medium hidden md:block">
-                Bookmark
+              <FiBookmark className="w-5 h-5" />
+              <span className="text-sm font-medium hidden md:block">
+                {bookmarked ? "Bookmarked" : "Bookmark"}
               </span>
             </motion.button>
 
@@ -149,19 +170,21 @@ const NoteView: React.FC<NoteViewProps> = ({ capture }) => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsFolderListOpen?.(!isFolderListOpen)}
-              className="p-2 rounded-lg cursor-pointer flex items-center gap-1 text-gray-500 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all"
+              className="py-1 px-2 rounded-full bg-gray-100/80 dark:bg-gray-800/50 border border-gray-800 text-gray-500 hover:bg-gray-200/80 dark:hover:bg-gray-700/50 cursor-pointer transition-all duration-200 flex items-center gap-1"
               title="Add to folder"
             >
-              <FiFolderPlus className="w-4 h-4" />
-              <span className="text-xs font-medium hidden md:block">
+              <FiFolderPlus className="w-5 h-5" />
+              <span className="text-sm font-medium hidden md:block">
                 Organize
               </span>
             </motion.button>
-            <motion.button>
-              <RiGeminiFill
-                onClick={() => setOpenAiChat(!openAiChat)}
-                className={`w-5 h-5 text-violet-500 cursor-pointer hover:text-violet-300`}
-              />
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleOpenChat}
+              className="p-1 rounded-full cursor-pointer text-violet-500 hover:bg-violet-800/20 transition-all duration-200"
+            >
+              <RiGeminiFill className="w-5 h-5" />
             </motion.button>
           </div>
         </div>
@@ -169,7 +192,7 @@ const NoteView: React.FC<NoteViewProps> = ({ capture }) => {
 
       {/* Main Content */}
       <div
-        className={`mx-auto ${containerWidth} flex-1 overflow-y-auto py-2 md:px-6`}
+        className={`mx-auto ${containerWidth} flex-1 overflow-y-auto py-4 md:px-6`}
       >
         {capture.processingStatus === PROCESSING_STATUS.ERROR ? (
           <div className="flex flex-col items-center justify-center h-full space-y-4 text-center">
@@ -178,23 +201,20 @@ const NoteView: React.FC<NoteViewProps> = ({ capture }) => {
               <br /> Please try again.
             </p>
             <button
-              className={`px-4 py-1 font-bold cursor-pointer bg-red-500/60 text-white rounded-lg hover:bg-red-600 transition`}
+              className={`px-4 py-2 font-semibold bg-red-500/80 text-white rounded-xl hover:bg-red-600 transition-all duration-200`}
               onClick={() => reProcessCapture(capture._id)}
+              disabled={loading}
             >
-             {loading ? "Reprocessing..." : "Reprocess"}
+              {loading ? "Reprocessing..." : "Reprocess"}
             </button>
           </div>
         ) : capture.processingStatus === PROCESSING_STATUS.PROCESSING ? (
-          <div
-            className="
-flex flex-col items-center justify-center h-full space-y-4 text-center
-          "
-          >
+          <div className="flex flex-col items-center justify-center h-full space-y-4 text-center">
             <p>
               <span className="animate-pulse text-gray-500 dark:text-gray-400">
                 Processing capture... <br />
               </span>
-              <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
                 Please wait, this may take a moment.
               </span>
             </p>
