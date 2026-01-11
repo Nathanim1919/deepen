@@ -30,6 +30,7 @@ import Waitlist from "./pages/Waitlist";
 import ConversationList from "./components/panels/conversationList";
 import { BrainChatContainer } from "./components/brainChat/BrainChatContainer";
 import { EmptyChatView } from "./components/brainChat/EmptyChatView";
+import { PricingPage } from "./pages/PricingPage";
 
 const FolderPanel = () => <FoldersPanel />;
 
@@ -38,21 +39,25 @@ const FolderNoteDetail = () => {
   return <CaptureDetail />;
 };
 
-const ConversationListPanel = () => <ConversationList />;
-
-const ConversationDetail = () => {
-  return <CaptureDetail />;
-};
-
-const SourcesPanel = () => <SourcePanel />;
-
-
-
 const SourceNoteDetail = () => {
   return <CaptureDetail />;
 };
 
-const BookmarksPanel = () => <BookmarkPanel />;
+const SourcesPanel = () => {
+  return <SourcePanel />;
+};
+
+const BookmarksPanel = () => {
+  return <BookmarkPanel />;
+};
+
+const ConversationListPanel = () => {
+  return <ConversationList />;
+};
+
+const ConversationDetail = () => {
+  return <CaptureDetail />;
+};
 
 const BookmarkDetail = () => {
   return <CaptureDetail />;
@@ -87,6 +92,12 @@ const ManifestoRoute = createRoute({
   getParentRoute: () => publicRoute,
   path: "manifesto",
   component: Manifesto,
+});
+
+const PricingRoute = createRoute({
+  getParentRoute: () => publicRoute,
+  path: "pricing",
+  component: PricingPage,
 });
 
 const FAQRoute = createRoute({
@@ -246,7 +257,7 @@ export const routeTree = rootRoute.addChildren([
   waitlistRoute,
   publicRoute.addChildren([
     heroRoute,
-    // pricingRoute,
+    PricingRoute,
     ManifestoRoute,
     // FeaturesRoute,
     FAQRoute,

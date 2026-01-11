@@ -161,6 +161,11 @@ export class BrainChatService {
     modelId?: string,
     signal?: AbortSignal
   ) {
+    // Validate conversationId is a valid MongoDB ObjectId
+    if (!Types.ObjectId.isValid(conversationId)) {
+      throw new Error(`Invalid conversation ID format: ${conversationId}. Please wait for conversation to be created.`);
+    }
+
     const conversation = await BrainChatConversation.findOne({ _id: new Types.ObjectId(conversationId), userId: new Types.ObjectId(userId) });
     if (!conversation) {
       throw new Error("Conversation not found");

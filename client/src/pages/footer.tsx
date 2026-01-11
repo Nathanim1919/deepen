@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import { api } from "../api";
 import { toast } from "sonner";
-// import { FiTwitter, FiGithub, FiLinkedin, FiDribbble } from "react-icons/fi";
+import { ArrowRight } from "lucide-react";
 
 export const Footer = () => {
     const [email, setEmail] = useState("");
@@ -30,167 +30,103 @@ export const Footer = () => {
           setIsLoading(false);
         });
     };
+
   return (
-    <motion.footer 
-      initial={{ opacity: 0 }}
-      whileInView={{ opacity: 1 }}
-      viewport={{ once: true, margin: "-50px" }}
-      className="bg-[#0A0A0A] text-zinc-400 px-6 lg:px-24 py-16 border-t border-white/5"
-    >
-      {/* Subtle grid texture */}
-      <div className="absolute inset-0 -z-10 opacity-5">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJncmlkIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSg0NSkiPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')]" />
-      </div>
+    <footer className="relative w-full bg-white dark:bg-black overflow-hidden pt-24 pb-12 border-t border-gray-100 dark:border-white/5">
+      {/* Cinematic Spotlight Effect */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-to-b from-blue-50/50 via-transparent to-transparent dark:from-blue-900/10 dark:via-transparent dark:to-transparent pointer-events-none" />
+      
+      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 flex flex-col items-center">
+        
+        {/* Main Content Area */}
+        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-32">
+            <div className="space-y-8">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="space-y-4"
+                >
+                    <h3 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">
+                        Stay ahead of the curve.
+                    </h3>
+                    <p className="text-gray-500 dark:text-gray-400 max-w-md text-lg leading-relaxed">
+                        Join the waitlist to get early access to our advanced content analysis tools. Organising the web has never been this powerful.
+                    </p>
+                </motion.div>
 
-      <div className="max-w-7xl mx-auto">
-        {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-10">
-          {/* Brand Section */}
-          <motion.div
-            initial={{ x: -20, opacity: 0 }}
-            whileInView={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            viewport={{ once: true }}
-            className="md:col-span-2"
-          >
-            <h2 className="text-2xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-violet-600 mb-4">
-              Deepen.
-            </h2>
-            <p className="text-sm leading-relaxed text-zinc-400 mb-6">
-              A modern extension for collecting and organizing web content efficiently.
-            </p>
-            
-            {/* Subscription */}
-            <div className="flex items-center gap-2">
-              <input 
-                onChange={(e) => setEmail(e.target.value)}
-                value={email}
-                disabled={submitted || isLoading}
-                type="email" 
-                placeholder="Get updates"
-                className="bg-white/5 border border-white/10 text-sm rounded-lg px-4 py-2.5 w-full focus:outline-none focus:ring-2 focus:ring-violet-500/50"
-              />
-              <motion.button
-                onClick={handleSubmit}
-                disabled={submitted || isLoading}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-violet-600 hover:bg-violet-500 text-white px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors"
-              >
-               {
-                isLoading ? "Joining..." : submitted ? "Joined!" : "Join Waitlist"
-               }
-              </motion.button>
+                <motion.form 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.1 }}
+                    onSubmit={handleSubmit}
+                    className="flex items-center gap-2 max-w-md relative group"
+                >
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-violet-500 rounded-xl opacity-20 group-hover:opacity-40 transition duration-500 blur-sm"></div>
+                    <div className="relative flex w-full bg-white dark:bg-white/5 rounded-xl p-1.5 border border-gray-200 dark:border-white/10 backdrop-blur-sm">
+                        <input 
+                            onChange={(e) => setEmail(e.target.value)}
+                            value={email}
+                            disabled={submitted || isLoading}
+                            type="email" 
+                            placeholder="enter your email..."
+                            className="flex-1 bg-transparent border-none text-gray-900 dark:text-white placeholder-gray-400 text-sm px-4 focus:outline-none focus:ring-0"
+                        />
+                        <button
+                            type="submit"
+                            disabled={submitted || isLoading}
+                            className="bg-gray-900 dark:bg-white text-white dark:text-black px-4 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
+                        >
+                            {isLoading ? "Joining..." : submitted ? "Joined" : "Join Waitlist"}
+                            {!isLoading && !submitted && <ArrowRight size={14} />}
+                        </button>
+                    </div>
+                </motion.form>
             </div>
-          </motion.div>
 
-          {/* Navigation Links */}
-          {/* {[
-            {
-              title: "Product",
-              links: ["Features", "Pricing", "Demo", "Extensions"]
-            },
-            {
-              title: "Company",
-              links: ["About", "Careers", "Blog", "Contact"]
-            },
-            {
-              title: "Connect",
-              links: ["Twitter", "GitHub", "LinkedIn", "Dribbble"]
-            }
-          ].map((section, i) => (
-            <motion.div
-              key={i}
-              initial={{ y: 20, opacity: 0 }}
-              whileInView={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2 + i * 0.1 }}
-              viewport={{ once: true }}
-            >
-              <h3 className="text-xs font-semibold text-zinc-300 mb-4 tracking-wider uppercase">
-                {section.title}
-              </h3>
-              <ul className="space-y-3">
-                {section.links.map((link, j) => (
-                  <motion.li
-                    key={j}
-                    whileHover={{ x: 2 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                  >
-                    <a 
-                      href="#" 
-                      className="text-sm text-zinc-400 hover:text-white transition-colors flex items-center gap-1.5"
-                    >
-                      {link === "Twitter" && <FiTwitter size={14} />}
-                      {link === "GitHub" && <FiGithub size={14} />}
-                      {link === "LinkedIn" && <FiLinkedin size={14} />}
-                      {link === "Dribbble" && <FiDribbble size={14} />}
-                      {link}
-                    </a>
-                  </motion.li>
-                ))}
-              </ul>
-            </motion.div>
-          ))} */}
+            <div className="hidden md:flex justify-end gap-12 text-sm text-gray-500 dark:text-gray-400">
+                <ul className="space-y-4">
+                    <li className="font-semibold text-gray-900 dark:text-white tracking-wider uppercase text-xs">Platform</li>
+                    <li><a href="#" className="hover:text-blue-500 transition-colors">Extensions</a></li>
+                    <li><a href="#" className="hover:text-blue-500 transition-colors">Pricing</a></li>
+                    <li><a href="#" className="hover:text-blue-500 transition-colors">Changelog</a></li>
+                </ul>
+                <ul className="space-y-4">
+                    <li className="font-semibold text-gray-900 dark:text-white tracking-wider uppercase text-xs">Legal</li>
+                    <li><a href="#" className="hover:text-blue-500 transition-colors">Privacy</a></li>
+                    <li><a href="#" className="hover:text-blue-500 transition-colors">Terms</a></li>
+                </ul>
+            </div>
         </div>
 
-        {/* Divider */}
-        <motion.div
-          initial={{ scaleX: 0 }}
-          whileInView={{ scaleX: 1 }}
-          transition={{ delay: 0.5 }}
-          viewport={{ once: true }}
-          className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-12"
-        />
-
-        {/* "Deepen" Feature Section */}
-        <motion.div
-          className="text-center mb-12"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          viewport={{ once: true }}
+        {/* MASSIVE CINEMATIC TEXT */}
+        <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+            viewport={{ once: true }}
+            className="relative w-full select-none"
         >
-          <div className="relative inline-block">
-            {/* Glow effect */}
-            <div className="absolute -inset-4 bg-violet-500/10 rounded-full blur-xl" />
+            <h1 className="text-[18vw] leading-[0.8] font-black text-center tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-gray-200 to-transparent dark:from-white/20 dark:to-transparent pointer-events-none">
+                DEEPEN
+            </h1>
             
-            {/* Main text with gradient */}
-            <h2 className="text-6xl md:text-7xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-zinc-400 relative">
-              DEEPEN
-            </h2>
-            
-            {/* Subtitle */}
-            <p className="mt-4 text-sm text-zinc-500 uppercase tracking-wider">
-              Advanced content analysis at your fingertips
+            {/* Overlay gradient to fade bottom of text into background */}
+            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white dark:from-black to-transparent" />
+        </motion.div>
+
+        {/* Footer Bottom Bar */}
+        <div className="w-full flex flex-col md:flex-row justify-between items-center gap-4 py-8 border-t border-gray-100 dark:border-white/5 mt-[-4vw] relative z-20">
+            <p className="text-xs text-gray-400 dark:text-zinc-600">
+                © {new Date().getFullYear()} Deepen Labs Inc.
             </p>
-          </div>
-        </motion.div>
+            <div className="flex gap-6">
+                {/* Social icons could go here */}
+            </div>
+        </div>
 
-        {/* Bottom Row */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          viewport={{ once: true }}
-          className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm"
-        >
-          <div className="text-zinc-500">
-            © {new Date().getFullYear()} deepen. All rights reserved.
-          </div>
-          
-          {/* <div className="flex items-center gap-6">
-            <a href="#" className="text-zinc-500 hover:text-white transition-colors">
-              Privacy Policy
-            </a>
-            <a href="#" className="text-zinc-500 hover:text-white transition-colors">
-              Terms of Service
-            </a>
-            <a href="#" className="text-zinc-500 hover:text-white transition-colors">
-              Cookies
-            </a>
-          </div> */}
-        </motion.div>
       </div>
-    </motion.footer>
+    </footer>
   );
 };

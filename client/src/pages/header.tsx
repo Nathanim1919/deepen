@@ -1,10 +1,13 @@
 import { Link, useMatchRoute } from "@tanstack/react-router";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { FiMenu, FiX } from "react-icons/fi";
 import { useState } from "react";
+import { useUIStore } from "../stores/ui-store";
+import { Moon, Sun } from "lucide-react";
 
 const navItems = [
   { path: "/", label: "Home" },
+  { path: "/pricing", label: "Pricing" },
   { path: "/manifesto", label: "Manifesto" },
   { path: "/faqs", label: "FAQs" },
   { path: "/feedback", label: "Feedback" },
@@ -13,11 +16,12 @@ const navItems = [
 export const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const matchRoute = useMatchRoute();
+  const { theme, toggleTheme } = useUIStore();
 
   const isActive = (path: string) => matchRoute({ to: path, fuzzy: false });
 
   return (
-    <header className="w-full bg-[#000000] relative z-1000">
+    <header className="w-full bg-white dark:bg-[#000000] relative z-1000 border-b border-gray-100 dark:border-transparent">
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         {/* Logo */}
         <motion.div
@@ -25,7 +29,7 @@ export const Header = () => {
           whileTap={{ scale: 0.98 }}
           className="text-xl font-light"
         >
-          <Link to="/" className="text-transparent bg-clip-text bg-gradient-to-r from-gray-300 to-white">
+          <Link to="/" className="text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-300 dark:to-white">
             Deepen<span className="text-blue-500">.</span>
           </Link>
         </motion.div>
@@ -39,7 +43,9 @@ export const Header = () => {
                 <Link
                   to={item.path}
                   className={`text-sm font-medium tracking-wide transition-colors ${
-                    active ? "text-white" : "text-gray-400 hover:text-gray-200"
+                    active 
+                      ? "text-black dark:text-white" 
+                      : "text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-gray-200"
                   }`}
                 >
                   {item.label}
@@ -56,11 +62,25 @@ export const Header = () => {
           })}
         </nav>
 
-        {/* Desktop CTA */}
-        <div className="hidden md:flex items-center space-x-3">
+        {/* Desktop CTA & Theme Toggle */}
+        <div className="hidden md:flex items-center space-x-4">
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors text-gray-600 dark:text-gray-400"
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {theme === "dark" ? (
+              <Sun className="w-5 h-5" />
+            ) : (
+              <Moon className="w-5 h-5" />
+            )}
+          </button>
+          
+          <div className="h-4 w-px bg-gray-200 dark:bg-white/10 mx-1" />
+
           <Link
             to="/login"
-            className="text-sm text-gray-300 hover:text-white transition"
+            className="text-sm text-gray-600 hover:text-black dark:text-gray-300 dark:hover:text-white transition"
           >
             Sign In
           </Link>
@@ -71,89 +91,81 @@ export const Header = () => {
             Get Started
           </Link>
         </div>
-         {/* <motion.button
-          onClick={() => window.location.href = "/waitlist"}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="px-6 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium transition-colors shadow-lg hover:shadow-blue-500/20"
-                        >
-                          Join Waitlist
-                        </motion.button> */}
-
+        
         {/* Mobile Menu Toggle */}
-        <motion.button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="md:hidden text-gray-400 hover:text-white"
-          whileTap={{ scale: 0.9 }}
-        >
-          {mobileOpen ? <FiX size={22} /> : <FiMenu size={22} />}
-        </motion.button>
+        <div className="md:hidden flex items-center gap-4">
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors text-gray-600 dark:text-gray-400"
+          >
+            {theme === "dark" ? (
+              <Sun className="w-5 h-5" />
+            ) : (
+              <Moon className="w-5 h-5" />
+            )}
+          </button>
+          
+          <motion.button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"
+            whileTap={{ scale: 0.9 }}
+          >
+            {mobileOpen ? <FiX size={22} /> : <FiMenu size={22} />}
+          </motion.button>
+        </div>
       </div>
 
       {/* Mobile Drawer */}
-   
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="md:hidden border-t border-gray-100 dark:border-white/5 bg-white dark:bg-[#000000] overflow-hidden"
+          >
+            <div className="px-6 py-6 space-y-6">
+              <nav className="flex flex-col space-y-4">
+                {navItems.map((item) => {
+                   const active = isActive(item.path);
+                   return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setMobileOpen(false)}
+                      className={`text-base font-medium transition-colors ${
+                        active 
+                          ? "text-black dark:text-white" 
+                          : "text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-gray-200"
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </nav>
+              
+              <div className="pt-6 border-t border-gray-100 dark:border-white/5 space-y-4">
+                <Link
+                  to="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="block text-base font-medium text-gray-600 hover:text-black dark:text-gray-300 dark:hover:text-white"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  to="/register"
+                  onClick={() => setMobileOpen(false)}
+                  className="block w-full text-center text-sm font-medium text-white bg-blue-600 py-3 rounded-xl hover:bg-blue-700 transition"
+                >
+                  Get Started
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 };
-
-
-{/* <AnimatePresence>
-{mobileOpen && (
-  <motion.div
-    initial={{ opacity: 0, y: -8 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -8 }}
-    transition={{ type: "spring", stiffness: 260, damping: 24 }}
-    className="md:hidden fixed top-16 left-0 right-0 bottom-0 bg-[#050505] z-40 backdrop-blur-xl"
-  >
-    <div className="px-6 py-6 space-y-5">
-      {/* {navItems.map((item) => (
-        <Link
-          key={item.path}
-          to={item.path}
-          onClick={() => setMobileOpen(false)}
-          className={`block text-base font-medium ${
-            isActive(item.path)
-              ? "text-white"
-              : "text-gray-400 hover:text-gray-200"
-          }`}
-        >
-          {item.label}
-        </Link>
-      ))} */}
-      {/* <div className="pt-6 space-y-4">
-        <Link
-          to="/login"
-          onClick={() => setMobileOpen(false)}
-          className="block text-sm text-gray-300 hover:text-white"
-        >
-          Sign In
-        </Link>
-        <Link
-          to="/register"
-          onClick={() => setMobileOpen(false)}
-          className="block w-full text-center text-sm text-white bg-blue-600 py-2 rounded-full hover:bg-blue-700 transition"
-        >
-          Get Started
-        </Link>
-      </div> 
-    </div>
-       <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="px-6 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium transition-colors shadow-lg hover:shadow-blue-500/20"
-                >
-                  Join Waitlist
-                </motion.button>
-  </motion.div>
-)}
-</AnimatePresence>
-<motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="px-6 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium transition-colors shadow-lg hover:shadow-blue-500/20"
-                >
-                  Join Waitlist
-                </motion.button> */}
-
-                

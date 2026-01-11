@@ -447,6 +447,14 @@ export const useBrainStore = create<BrainStore>((set, get) => ({
     const convo = get().conversations[id];
     if (!convo) return;
 
+    // Prevent sending if conversation hasn't been saved to server yet (temp ID)
+    // MongoDB ObjectIds are 24 hex characters
+    const isValidMongoId = /^[a-f\d]{24}$/i.test(convo.id);
+    if (!isValidMongoId) {
+      console.warn("Cannot send message: conversation not yet saved. Please wait for the initial response.");
+      return;
+    }
+
     // Add user message optimistically BEFORE sending request
     const userMessageId = nanoid();
     set((state) => ({

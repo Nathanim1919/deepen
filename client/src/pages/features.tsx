@@ -39,14 +39,15 @@ export const Features: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen pt-8 bg-[#000000] text-white relative overflow-hidden">
+    <div className="min-h-screen pt-8 bg-white dark:bg-[#000000] text-gray-900 dark:text-white relative overflow-hidden">
       {/* Subtle neural network background */}
       <div className="absolute inset-0 opacity-10">
         <svg className="w-full h-full" viewBox="0 0 1000 1000" fill="none">
           <path
             d="M200,200 Q400,300 600,200 T800,300 M300,600 Q500,700 700,600 T900,700"
-            stroke="#3b82f6"
+            stroke="currentColor"
             strokeWidth="1"
+            className="text-blue-500"
           />
         </svg>
       </div>
@@ -59,8 +60,8 @@ export const Features: React.FC = () => {
           transition={{ duration: 0.8 }}
           className="text-center space-y-6"
         >
-          <h1 className="text-4xl sm:text-5xl font-light tracking-tight">
-            <span className="bg-gradient-to-r from-blue-300 to-blue-500 bg-clip-text text-transparent">
+          <h1 className="text-4xl sm:text-5xl font-light tracking-tight text-gray-900 dark:text-white">
+            <span className="bg-gradient-to-r from-blue-600 to-blue-400 dark:from-blue-300 dark:to-blue-500 bg-clip-text text-transparent">
               Deepen.live
             </span>
           </h1>
@@ -70,7 +71,7 @@ export const Features: React.FC = () => {
             animate={{ scaleX: 1 }}
             transition={{ delay: 0.3, duration: 0.6 }}
           />
-          <p className="text-lg text-blue-100/80 max-w-md mx-auto">
+          <p className="text-lg text-gray-600 dark:text-blue-100/80 max-w-md mx-auto">
             The AI-powered second brain for focused thinkers
           </p>
         </motion.div>

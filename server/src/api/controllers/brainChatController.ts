@@ -161,10 +161,25 @@ export class BrainChatController {
   
       res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
       res.end();
-    } catch (error) {
-      logger.error("Streaming failed", { error });
+    } catch (error: any) {
+      const errorMessage = error?.message || "Streaming failed";
+      const isInvalidId = errorMessage.includes("Invalid conversation ID");
+      const isNotFound = errorMessage.includes("Conversation not found");
+      
+      logger.error("Send message failed", { 
+        error: errorMessage, 
+        conversationId: req.params.conversationId,
+        isInvalidId,
+        isNotFound
+      });
+      
       res.write(
-        `data: ${JSON.stringify({ error: "Streaming failed" })}\n\n`
+        `data: ${JSON.stringify({ 
+          error: isInvalidId ? "INVALID_CONVERSATION_ID" : 
+                 isNotFound ? "CONVERSATION_NOT_FOUND" : 
+                 "Streaming failed",
+          message: errorMessage 
+        })}\n\n`
       );
       res.end();
     }

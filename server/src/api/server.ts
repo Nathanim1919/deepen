@@ -10,7 +10,7 @@ import brainAiRoutes from "./routes/brainAiRoute";
 import feedbackRoutes from "./routes/feedbackRoutes";
 import waitlistRoutes from "./routes/waitlistRoute";
 import { auth } from "../lib/auth";
-import { fromNodeHeaders, toNodeHandler } from "better-auth/node";
+import { toNodeHandler } from "better-auth/node";
 import { Request, Response } from "express";
 import dotenv from "dotenv";
 // import bodyParser from "body-parser";
@@ -48,33 +48,23 @@ app.all("/api/auth/*splat", (req: Request, res: Response) => {
   toNodeHandler(auth)(req, res);
 });
 
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ limit: "10mb", extended: true }));
+// JSON body parser (ensure enough limit for large text content)
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
+// Routes
 app.use("/api/v1/captures", captureRoutes);
 app.use("/api/v1/folders", collectionRoutes);
 app.use("/api/v1/sources", sourceRoutes); // Use source routes
-app.use("/api/v1/account", userProfileRoutes);
+app.use("/api/v1/user", userProfileRoutes);
 app.use("/api/v1/ai", aiChatRoutes);
+app.use("/api/v1/brain", brainAiRoutes);
 app.use("/api/v1/feedback", feedbackRoutes);
 app.use("/api/v1/waitlist", waitlistRoutes);
-app.use("/api/v1/brain", brainAiRoutes);
 
-
-
-app.use("/api/v1/health", (_: Request, res: Response) => {
-  res.status(200).json({ status: "ok", message: "Server is healthy" });
-});
-
-app.get("/api/me", async (req: Request, res: Response) => {
-  const session = await auth.api.getSession({
-    headers: fromNodeHeaders(req.headers),
-  });
-  res.json(session);
-});
-
-app.get("/api/health", (_: Request, res: Response) => {
-  res.status(200).json({ status: "ok", message: "Server is healthy" });
+// Health check
+app.get("/health", (_: Request, res: Response) => {
+  res.json({ status: "ok", message: "Server is healthy" });
 });
 
 // Start server
