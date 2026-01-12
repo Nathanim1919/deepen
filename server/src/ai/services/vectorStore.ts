@@ -27,7 +27,15 @@ export async function indexText({
   userId: string;
   userApiKey: string;
 }) {
+  const traceId = `[VectorStore] [${docId}]`;
+  
+  logger.info(`${traceId} 📥 Starting indexText...`);
+  logger.info(`${traceId} Text length: ${text.length} characters`);
+  logger.info(`${traceId} User ID: ${userId}`);
+  logger.info(`${traceId} API Key: ${userApiKey ? "***" + userApiKey.slice(-4) : "NOT PROVIDED"}`);
+  
   const chunks = chunkText(text);
+  logger.info(`${traceId} 📦 Text chunked into ${chunks.length} chunks`);
 
   interface QdrantPointPayload {
     [key: string]: string | number;
@@ -46,10 +54,12 @@ export async function indexText({
 
   const points: QdrantPoint[] = [];
 
-  logger.info(`Indexing document ${docId} with ${chunks.length} chunks`);
+  logger.info(`${traceId} 🔄 Generating embeddings for ${chunks.length} chunks...`);
 
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i];
+    logger.info(`${traceId} 🧬 Generating embedding for chunk ${i + 1}/${chunks.length} (${chunk.length} chars)`);
+    
     const embedding = await generateGeminiEmbeddingsWithFetch(
       chunk,
       userApiKey,
@@ -62,13 +72,14 @@ export async function indexText({
       // Validate embedding
       if (!Array.isArray(embedding) || embedding.length !== VECTOR_SIZE) {
         logger.error(
-          `Invalid embedding for chunk ${i} of doc ${docId}: Expected ${VECTOR_SIZE} dimensions, got ${embedding.length}`,
+          `${traceId} ❌ Invalid embedding for chunk ${i}: Expected ${VECTOR_SIZE} dimensions, got ${embedding.length}`,
         );
         continue;
       }
 
+      const pointId = uuidv4();
       points.push({
-        id: uuidv4(), // Generate a unique ID for the point
+        id: pointId,
         vector: embedding,
         payload: {
           text: chunk,
@@ -79,51 +90,69 @@ export async function indexText({
         },
       });
 
-      logger.debug("First point to upsert:", JSON.stringify(points[0]));
-      logger.debug(`POINTS: ${points}`);
+      logger.info(`${traceId} ✅ Chunk ${i + 1} embedded successfully (point ID: ${pointId.slice(0, 8)}...)`);
     } else {
       logger.warn(
-        `Failed to generate embedding for chunk ${i} of doc ${docId}`,
+        `${traceId} ⚠️ Failed to generate embedding for chunk ${i + 1}`,
       );
     }
   }
 
   if (points.length === 0) {
-    logger.warn(`No valid points to upsert for doc ${docId}`);
+    logger.warn(`${traceId} ⚠️ No valid points to upsert - aborting`);
     return;
   }
 
+  logger.info(`${traceId} 📊 Summary: ${points.length}/${chunks.length} chunks successfully embedded`);
+
   // Ensure collection exists
+  logger.info(`${traceId} 🗄️ Ensuring 'documents' collection exists...`);
   await ensureCollection(qdrant, "documents");
 
   // Upsert with retry
+  logger.info(`${traceId} 📤 Upserting ${points.length} points to Qdrant...`);
+  
   await withRetry(
     async () => {
       try {
-        logger.debug(
-          `Upserting ${points.length} points to documents collection`,
-        );
-        await qdrant
-          .upsert("documents", { points })
-          .then((res) => {
-            logger.info(`THE RESPONSE IS: ${res}`);
-            logger.info(
-              `Successfully upserted ${points.length} points for doc ${docId}`,
-            );
-          })
-          .catch((err) => {
-            logger.error(`ERROR OCCURED: ${err}`);
-          });
-        // logger.info(`Upsert result: ${JSON.stringify(result)}`);
+        const result = await qdrant.upsert("documents", { points });
+        
+        logger.info(`${traceId} ✅ Qdrant upsert response:`, {
+          status: result.status,
+          operation_id: result.operation_id,
+        });
+
+        // Verification: Count points for this document
+        const countResult = await qdrant.count("documents", {
+          filter: {
+            must: [
+              { key: "doc_id", match: { value: docId } },
+              { key: "user_id", match: { value: userId } },
+            ],
+          },
+          exact: true,
+        });
+
+        logger.info(`${traceId} 🔍 VERIFICATION: Found ${countResult.count} points in Qdrant for this document`);
+        
+        if (countResult.count === 0) {
+          logger.error(`${traceId} ❌ VERIFICATION FAILED: No points found after upsert!`);
+        } else if (countResult.count < points.length) {
+          logger.warn(`${traceId} ⚠️ VERIFICATION WARNING: Expected ${points.length} points, found ${countResult.count}`);
+        } else {
+          logger.info(`${traceId} ✅ VERIFICATION SUCCESS: All ${points.length} points saved to vector DB`);
+        }
+        
       } catch (error) {
-        logger.error(`Upsert failed for doc ${docId}:`, {
-          message: error.message,
-          stack: error.stack,
-          status: error.status,
-          response: error.response
-            ? JSON.stringify(error.response.data, null, 2)
+        const err = error as Error & { status?: number; response?: { data: unknown }; cause?: unknown };
+        logger.error(`${traceId} ❌ Upsert failed:`, {
+          message: err.message,
+          stack: err.stack,
+          status: err.status,
+          response: err.response
+            ? JSON.stringify(err.response.data, null, 2)
             : null,
-          cause: error.cause,
+          cause: err.cause,
           points: points.length,
         });
         throw error;
@@ -132,6 +161,8 @@ export async function indexText({
     3,
     2000,
   );
+  
+  logger.info(`${traceId} ✅ indexText completed successfully`);
 }
 
 async function ensureCollection(client: QdrantClient, collectionName: string) {

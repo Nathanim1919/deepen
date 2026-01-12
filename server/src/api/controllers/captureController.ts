@@ -83,19 +83,23 @@ export const saveCapture = async (
       });
 
     } else {
-      logger.info(`AI Initializing for capture ${capture._id}`);
+      const captureId = capture._id?.toString() || "";
+      const userId = capture.owner?.toString() || "";
+      
+      logger.info(`[Capture] 🤖 Triggering AI processing for capture ${captureId}`);
+      await aiProcessing.trigger({ captureId, userId });
+      logger.info(`[Capture] ✅ AI processing task queued`);
 
-      await aiProcessing.trigger({
-        captureId: capture._id?.toString() || "",
-        userId: capture.owner?.toString() || "",
-      });
-
-      await embeddingProcessing.trigger({
-        captureId: capture._id?.toString() || "",
-        userId: capture.owner?.toString() || "",
+      logger.info(`[Capture] 🧬 Triggering embedding processing for capture ${captureId}`);
+      logger.info(`[Capture] 📋 Embedding task payload:`, { captureId, userId: userId.slice(0, 8) + "...", taskType: EmbeddingTaskType.INDEX });
+      
+      const embeddingTask = await embeddingProcessing.trigger({
+        captureId,
+        userId,
         taskType: EmbeddingTaskType.INDEX,
       });
-
+      
+      logger.info(`[Capture] ✅ Embedding task queued with ID: ${embeddingTask.id}`);
     }
 
     const conversation = await Conversation.create({ captureId: capture._id });
