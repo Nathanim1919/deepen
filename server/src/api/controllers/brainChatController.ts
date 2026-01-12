@@ -21,7 +21,7 @@ export class BrainChatController {
       res.setHeader("Cache-Control", "no-cache");
       res.setHeader("Connection", "keep-alive");
 
-      const { conversation, stream } =
+      const { conversation, stream, sources } =
         await BrainChatService.startConversationStreaming(
           user.id,
           { id: user.id, createdAt, context, messages, modelId },
@@ -50,19 +50,26 @@ export class BrainChatController {
         }
       }
 
-      // ✅ Save assistant message AFTER stream completes
-      conversation.messages.push({
+      // ✅ Save assistant message AFTER stream completes (with sources!)
+      const assistantMessage = {
         id: uuidv4() as string,
-        role: "assistant",
+        role: "assistant" as const,
         content: assistantText,
         timestamp: new Date(),
-        status: "received",
-      });
+        status: "received" as const,
+        sources: sources.length > 0 ? sources : undefined,  // Attach sources
+      };
+      conversation.messages.push(assistantMessage);
 
       const title = await BrainChatService.generateConversationTitle(conversation.messages);
       conversation.title = title;
 
       await conversation.save();
+
+      // Send sources separately so frontend can display them under the message
+      if (sources.length > 0) {
+        res.write(`data: ${JSON.stringify({ sources })}\n\n`);
+      }
 
       res.write(`data: ${JSON.stringify({ done: true, conversation })}\n\n`);
       res.end();
@@ -117,7 +124,7 @@ export class BrainChatController {
       res.setHeader("Cache-Control", "no-cache");
       res.setHeader("Connection", "keep-alive");
   
-      const { conversation, stream } =
+      const { conversation, stream, sources } =
         await BrainChatService.sendMessage(
           conversationId,
           user.id,
@@ -148,17 +155,24 @@ export class BrainChatController {
         }
       }
   
-      // ✅ Save assistant message AFTER stream completes
-      conversation.messages.push({
+      // ✅ Save assistant message AFTER stream completes (with sources!)
+      const assistantMessage = {
         id: uuidv4() as string,
-        role: "assistant",
+        role: "assistant" as const,
         content: assistantText,
         timestamp: new Date(),
-        status: "received",
-      });
+        status: "received" as const,
+        sources: sources.length > 0 ? sources : undefined,  // Attach sources
+      };
+      conversation.messages.push(assistantMessage);
   
       await conversation.save();
   
+      // Send sources separately so frontend can display them under the message
+      if (sources.length > 0) {
+        res.write(`data: ${JSON.stringify({ sources })}\n\n`);
+      }
+
       res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
       res.end();
     } catch (error: any) {

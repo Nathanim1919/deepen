@@ -79,7 +79,7 @@ const EmptyNoteView = () => {
           transition={{ duration: 0.4 }}
           className="mb-12"
         >
-          <h1 className="text-4xl font-light tracking-tight text-center">
+          <h1 className="text-4xl  font-light tracking-tight text-center">
             <span className="text-transparent bg-clip-text bg-gradient-to-r dark:from-[#f5f5f7] dark:to-[#f5f5f7]/80 from-[#333] to-[#f5f5f7] font-medium">
               Deepen
             </span>
@@ -91,7 +91,7 @@ const EmptyNoteView = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="flex items-center gap-2.5 mb-1"
+          className="flex items-center gap-2.5 mb-1 serif"
         >
           <p className="text-[#86868b] text-[17px]">{greeting},</p>
           <p className="dark:text-[#f5f5f7] text-[#333] text-[17px] font-medium capitalize">
@@ -101,7 +101,7 @@ const EmptyNoteView = () => {
 
         {/* Prompt - SF Pro display style */}
         <motion.h2
-          className="text-[32px] leading-[1.1] font-medium mb-8 text-transparent bg-clip-text bg-gradient-to-r from-[#333] to-gray-300"
+          className="text-[32px] serif leading-[1.1] font-medium mb-8 text-transparent bg-clip-text bg-gradient-to-r from-[#333] to-gray-300"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.15 }}

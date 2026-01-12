@@ -1,14 +1,16 @@
 import { motion } from "framer-motion";
 import { Brain } from "lucide-react";
 import { LLMRenderer } from "../LLMRenderer";
+import { MessageSources } from "./MessageSources";
+import type { MessageSource } from "../../stores/brain-store";
 
 interface MessageBubbleProps {
   role: "user" | "assistant";
   content: string;
-  references?: { id: string; title: string; url: string }[];
+  sources?: MessageSource[];
 }
 
-export const MessageBubble = ({ role, content }: MessageBubbleProps) => {
+export const MessageBubble = ({ role, content, sources }: MessageBubbleProps) => {
   const isUser = role === "user";
 
   return (
@@ -55,6 +57,11 @@ export const MessageBubble = ({ role, content }: MessageBubbleProps) => {
               }`}
           >
             <LLMRenderer markdown={content} />
+            
+            {/* Sources (only for assistant messages) */}
+            {!isUser && sources && sources.length > 0 && (
+              <MessageSources sources={sources} />
+            )}
           </div>
 
           {/* Action Row (Optional: Copy, Regenerate, etc. placeholder) */}

@@ -23,7 +23,7 @@ export const ContextSummaryBar = () => {
   if (activeContexts.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-2 border-b border-gray-300 dark:border-[#1b1b1c]">
+    <div className="flex flex-col gap-2 border-b border-gray-100 dark:border-[#1b1b1c]">
     <div className="flex gap-2 min-h-10 overflow-x-auto p-2 opacity-60 rounded-md bg-transparent">
       <AnimatePresence
       >

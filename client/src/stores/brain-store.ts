@@ -9,12 +9,24 @@ import { useSettingsStore } from "./settings-store";
 /*
     Types
 */
+
+/**
+ * Source reference - tracks which document chunks were used for an AI answer
+ */
+export type MessageSource = {
+  docId: string;       // The capture/document ID
+  score: number;       // Relevance score (0-1)
+  chunkIndex: number;  // Which chunk from the document
+  preview?: string;    // First ~100 chars of the chunk (for display)
+};
+
 export type Message = {
   id: string;
   role: "user" | "assistant" | "system";
   content: string;
   createdAt: number;
   status: "sending" | "sent" | "error";
+  sources?: MessageSource[];  // Sources used for this message (for assistant messages)
 };
 
 export type BrainSelector = {
@@ -408,6 +420,28 @@ export const useBrainStore = create<BrainStore>((set, get) => ({
         },
         (usage) => {
           console.log('usage', usage);
+        },
+        (sources) => {
+          // Update the assistant message with sources when they arrive
+          set((state) => {
+            const convo = state.conversations[conversationId];
+            if (!convo) return state;
+
+            const assistantMessage = convo.messages.find(
+              (m) => m.role === "assistant"
+            );
+
+            if (assistantMessage) {
+              assistantMessage.sources = sources;
+            }
+
+            return {
+              conversations: {
+                ...state.conversations,
+                [conversationId]: { ...convo },
+              },
+            };
+          });
         }
       );
 
@@ -531,6 +565,29 @@ export const useBrainStore = create<BrainStore>((set, get) => ({
         },
         (usage: any) => {
           console.log('usage', usage);
+        },
+        (sources) => {
+          // Update the current assistant message with sources
+          set((state) => {
+            const currentConvo = state.conversations[id];
+            if (!currentConvo) return state;
+
+            const updatedMessages = currentConvo.messages.map((msg) =>
+              msg.role === "assistant" && msg.status === 'sending'
+                ? { ...msg, sources }
+                : msg
+            );
+
+            return {
+              conversations: {
+                ...state.conversations,
+                [id]: {
+                  ...currentConvo,
+                  messages: updatedMessages,
+                },
+              },
+            };
+          });
         }
       );
 

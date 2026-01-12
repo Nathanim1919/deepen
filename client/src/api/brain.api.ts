@@ -1,5 +1,5 @@
 import { api, API_CONFIG } from ".";
-import type { Conversation } from "../stores/brain-store";
+import type { Conversation, MessageSource } from "../stores/brain-store";
 
 // export const startConversation = async (conversation: Conversation) => {
 //   const response = await api.post('/brain/conversation/start', conversation);
@@ -10,7 +10,8 @@ import type { Conversation } from "../stores/brain-store";
 export const startConversationStream = async (
   conversation: Conversation,
   onDelta?: (delta: string) => void,
-  onUsage?: (usage: any) => void
+  onUsage?: (usage: any) => void,
+  onSources?: (sources: MessageSource[]) => void
 ): Promise<Conversation> => {
   // Using better-auth which handles auth via cookies
   // credentials: "include" will send the auth cookies
@@ -99,6 +100,11 @@ export const startConversationStream = async (
               onUsage(data.usage);
             }
 
+            // Capture sources event (sent before done)
+            if (data.sources && onSources) {
+              onSources(data.sources);
+            }
+
             if (data.done && data.conversation) {
               // Return the complete conversation from the done event
               const serverConversation = data.conversation;
@@ -114,6 +120,7 @@ export const startConversationStream = async (
                   content: msg.content,
                   createdAt: new Date(msg.timestamp || msg.createdAt).getTime(),
                   status: msg.status || 'sent',
+                  sources: msg.sources,  // Include sources in message
                 })),
                 lastActivity: serverConversation.lastActivity ? new Date(serverConversation.lastActivity).getTime() : undefined,
                 isActive: serverConversation.isActive,
@@ -136,7 +143,8 @@ export const sendMessage = async (
   conversation: Conversation,
   message: string,
   onDelta?: (delta: string) => void,
-  onUsage?: (usage: any) => void
+  onUsage?: (usage: any) => void,
+  onSources?: (sources: MessageSource[]) => void
 ): Promise<Conversation> => {
   const response = await fetch(`${API_CONFIG.baseURL}brain/conversation/${conversation.id}/message`, {
     method: "POST",
@@ -199,6 +207,7 @@ export const sendMessage = async (
     const decoder = new TextDecoder();
     let buffer = "";
     let assistantText = "";
+    let pendingSources: MessageSource[] = [];  // Store sources until we build the message
 
     while (true) {
       const { done, value } = await reader.read();
@@ -225,6 +234,12 @@ export const sendMessage = async (
               onUsage(data.usage);
             }
 
+            // Capture sources event (sent before done)
+            if (data.sources) {
+              pendingSources = data.sources;
+              if (onSources) onSources(data.sources);
+            }
+
             if (data.done) {
               if (data.conversation) {
                 // Start conversation: backend returns full conversation
@@ -241,6 +256,7 @@ export const sendMessage = async (
                     content: msg.content,
                     createdAt: new Date(msg.timestamp || msg.createdAt).getTime(),
                     status: msg.status || 'sent',
+                    sources: msg.sources,  // Include sources in message
                   })),
                   lastActivity: serverConversation.lastActivity ? new Date(serverConversation.lastActivity).getTime() : undefined,
                   isActive: serverConversation.isActive,
@@ -257,6 +273,7 @@ export const sendMessage = async (
                       content: assistantText,
                       createdAt: Date.now(),
                       status: "sent",
+                      sources: pendingSources.length > 0 ? pendingSources : undefined,  // Include sources
                     },
                   ],
                 };

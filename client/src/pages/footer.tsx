@@ -47,9 +47,9 @@ export const Footer = () => {
                     viewport={{ once: true }}
                     className="space-y-4"
                 >
-                    <h3 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">
+                    <h1 className="serif text-7xl font-semibold tracking-tight text-gray-900 dark:text-white">
                         Stay ahead of the curve.
-                    </h3>
+                    </h1>
                     <p className="text-gray-500 dark:text-gray-400 max-w-md text-lg leading-relaxed">
                         Join the waitlist to get early access to our advanced content analysis tools. Organising the web has never been this powerful.
                     </p>

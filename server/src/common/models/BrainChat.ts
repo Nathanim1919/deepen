@@ -15,12 +15,23 @@ export interface BrainChatContext {
   };
 }
 
+/**
+ * Source reference - tracks which document chunks were used for an answer
+ */
+export interface MessageSource {
+  docId: string;       // The capture/document ID
+  score: number;       // Relevance score (0-1)
+  chunkIndex: number;  // Which chunk from the document
+  preview?: string;    // First ~100 chars of the chunk (for display)
+}
+
 export interface BrainChatMessage {
   id: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: Date;
   status: 'sent' | 'received';
+  sources?: MessageSource[];  // Sources used (for assistant messages)
 }
 
 export interface IBrainChatConversation extends mongoose.Document {
@@ -37,6 +48,14 @@ export interface IBrainChatConversation extends mongoose.Document {
 }
 
 
+// Schema for source references in assistant messages
+const MessageSourceSchema = new Schema({
+  docId: { type: String, required: true },
+  score: { type: Number, required: true },
+  chunkIndex: { type: Number, required: true },
+  preview: { type: String },
+}, { _id: false });
+
 // BrainChatMessageSchema is the schema for a message in a brain chat conversation
 const BrainChatMessageSchema = new Schema<BrainChatMessage>({
   id: { type: String, required: true },
@@ -44,6 +63,7 @@ const BrainChatMessageSchema = new Schema<BrainChatMessage>({
   content: { type: String, required: true },
   timestamp: { type: Date, default: Date.now },
   status: { type: String, enum: ['sent', 'received'], required: true },
+  sources: { type: [MessageSourceSchema], default: undefined },  // Only for assistant messages
 }, { _id: false });
 
 

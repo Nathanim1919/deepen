@@ -110,7 +110,11 @@ export const BrainChatContainer = () => {
                     <>
                         {conversation?.messages.map((item) => (
                             <div key={item.id} className={`flex ${item.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                <MessageBubble role={item.role as 'user' | 'assistant'} content={item.content} />
+                                <MessageBubble 
+                                    role={item.role as 'user' | 'assistant'} 
+                                    content={item.content} 
+                                    sources={item.sources}
+                                />
                             </div>
                         ))}
                         {/* Scroll anchor */}

@@ -1,4 +1,4 @@
-import { Bookmark, Bot, Brain, FolderPlus, Plus, ArrowUp, Zap, Command, Paperclip } from "lucide-react";
+import { Bookmark, Bot, Brain, FolderPlus, Plus, ArrowUp, Zap, Command } from "lucide-react";
 import type { UIStore } from "../../stores/types";
 import { useStore } from "../../context/StoreContext";
 import { useNavigate } from "@tanstack/react-router";
@@ -7,7 +7,8 @@ import { useSettingsStore, AUTO_MODEL_ID } from "../../stores/settings-store";
 import { ContextSummaryBar } from "./ContextSummaryBar";
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import { authClient } from "../../lib/auth-client";
 
 export const EmptyChatView = () => {
     const navigate = useNavigate();
@@ -18,18 +19,20 @@ export const EmptyChatView = () => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [isFocused, setIsFocused] = useState(false);
 
+    const { data: session } = authClient.useSession();
+
     // Get display name for the current model
     const getModelDisplayName = () => {
         if (selectedModel?.name) {
-            return selectedModel.name.length > 20 
-                ? selectedModel.name.slice(0, 20) + "..." 
+            return selectedModel.name.length > 20
+                ? selectedModel.name.slice(0, 20) + "..."
                 : selectedModel.name;
         }
         if (defaultModelId === AUTO_MODEL_ID) {
             return "Auto";
         }
-        return defaultModelId.length > 20 
-            ? defaultModelId.slice(0, 20) + "..." 
+        return defaultModelId.length > 20
+            ? defaultModelId.slice(0, 20) + "..."
             : defaultModelId;
     };
 
@@ -66,39 +69,33 @@ export const EmptyChatView = () => {
     };
 
     return (
-        <div className="h-full w-full bg-[#f5f2f2] dark:bg-[#0c0c0c] flex flex-col items-center justify-center relative overflow-hidden">
-            
-            {/* Ambient Background Glow */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                 <div className="absolute top-[20%] left-[20%] w-[600px] h-[600px] bg-blue-50/40 dark:bg-blue-900/5 rounded-full blur-[120px]" />
-                 <div className="absolute bottom-[20%] right-[20%] w-[500px] h-[500px] bg-purple-50/40 dark:bg-violet-900/5 rounded-full blur-[100px]" />
-            </div>
+        <div className="serif h-full w-full bg-[#f5f2f2] dark:bg-[#0c0c0c] flex flex-col items-center justify-center relative overflow-hidden">
+
+
 
             <div className={`z-10 w-full max-w-2xl px-6 flex flex-col items-center gap-8 transition-all duration-500 ${middlePanelCollapsed ? "scale-105" : "scale-100"}`}>
-                
+
                 {/* Header / Greeting */}
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
                     className="flex flex-col items-center gap-5 mb-2"
                 >
-                     <div className="h-14 w-14 bg-white dark:bg-zinc-900 rounded-2xl flex items-center justify-center shadow-lg shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-zinc-800">
-                        <Brain className="text-gray-900 dark:text-white w-7 h-7" strokeWidth={1.5} />
-                     </div>
-                     <h1 className="text-3xl font-medium text-gray-900 dark:text-white tracking-tight">
-                        How can I help you deepen your knowledge?
-                     </h1>
+
+                    <h1 className="text-3xl font-medium text-gray-900 dark:text-white tracking-tight">
+                    Hello <span className="font-bold capitalize dark:text-[#0effab] text-[#0071e3]">{session?.user?.name?.split(" ")[0]}</span>, how can I help you?
+                    </h1>
                 </motion.div>
 
                 {/* Main Input Card */}
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.1 }}
                     className={`w-full bg-white dark:bg-[#151516] rounded-3xl border transition-all duration-300 shadow-xl shadow-gray-200/40 dark:shadow-black/20 overflow-hidden group
-                        ${isFocused 
-                            ? "border-blue-500/30 ring-4 ring-blue-500/5 dark:ring-blue-500/10" 
+                        ${isFocused
+                            ? "border-blue-500/30 ring-4 ring-blue-500/5 dark:ring-blue-500/10"
                             : "border-gray-200 dark:border-zinc-800 hover:border-gray-300 dark:hover:border-zinc-700"
                         }`}
                 >
@@ -116,39 +113,38 @@ export const EmptyChatView = () => {
                             onBlur={() => setIsFocused(false)}
                             rows={1}
                             className="w-full bg-transparent border-none focus:ring-0 resize-none text-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 leading-relaxed max-h-[200px] overflow-y-auto outline-0"
-                            placeholder="Ask anything..." 
+                            placeholder={`Let's dive into your knowledge...`}
                         />
                     </div>
 
                     {/* Toolbar */}
                     <div className="px-3 py-3 mt-2 flex items-center justify-between">
-                        
+
                         {/* Left Actions (Context) */}
                         <div className="flex items-center gap-1.5">
-                             {/* Attach Button */}
-                             <button 
+                            {/* Attach Button */}
+                            <button
                                 onClick={() => openContextSelector("captures")}
                                 onMouseEnter={(e) => showHoverCoach("captures", e.currentTarget)}
                                 onMouseLeave={hideHoverCoach}
                                 className="p-2 rounded-xl cursor-pointer text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
                                 title="Add Context"
-                             >
+                            >
                                 <Plus size={20} strokeWidth={2} />
-                             </button>
-                             
-                             <div className="h-4 w-px bg-gray-200 dark:bg-zinc-800 mx-1" />
-                             
-                             {/* Context Toggles */}
-                             <div className="flex items-center gap-1 bg-gray-50 dark:bg-zinc-900/50 p-1 rounded-xl border border-transparent dark:border-zinc-800/50">
+                            </button>
+
+                            <div className="h-4 w-px bg-gray-200 dark:bg-zinc-800 mx-1" />
+
+                            {/* Context Toggles */}
+                            <div className="flex items-center gap-1 bg-gray-50 dark:bg-zinc-900/50 p-1 rounded-xl border border-transparent dark:border-zinc-800/50">
                                 <button
                                     onClick={toggleBrain}
                                     onMouseEnter={(e) => showHoverCoach("brain", e.currentTarget)}
                                     onMouseLeave={hideHoverCoach}
-                                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 cursor-pointer ${
-                                        isBrainActive()
+                                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 cursor-pointer ${isBrainActive()
                                             ? "bg-white dark:bg-zinc-800 text-blue-600 dark:text-blue-400 shadow-sm"
                                             : "text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-zinc-800/50"
-                                    }`}
+                                        }`}
                                 >
                                     <Brain size={14} />
                                     <span>Brain</span>
@@ -168,16 +164,15 @@ export const EmptyChatView = () => {
                                     onClick={toggleBookmark}
                                     onMouseEnter={(e) => showHoverCoach("bookmarks", e.currentTarget)}
                                     onMouseLeave={hideHoverCoach}
-                                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 cursor-pointer ${
-                                        isBookmarkActive()
+                                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 cursor-pointer ${isBookmarkActive()
                                             ? "bg-white dark:bg-zinc-800 text-blue-600 dark:text-blue-400 shadow-sm"
                                             : "text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-zinc-800/50"
-                                    }`}
+                                        }`}
                                 >
                                     <Bookmark size={14} />
                                     <span>Bookmarks</span>
                                 </button>
-                             </div>
+                            </div>
                         </div>
 
                         {/* Right Actions (Model & Send) */}
@@ -193,27 +188,26 @@ export const EmptyChatView = () => {
                             <button
                                 onClick={handleSendMessage}
                                 disabled={!message.trim()}
-                                className={`p-2.5 rounded-xl transition-all duration-300 ${
-                                    message.trim() 
-                                    ? "bg-gray-900 dark:bg-white text-white dark:text-black shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 cursor-pointer" 
-                                    : "bg-gray-100 dark:bg-zinc-800 text-gray-300 dark:text-zinc-600 cursor-not-allowed"
-                                }`}
+                                className={`p-2.5 rounded-full transition-all duration-300 ${message.trim()
+                                        ? "bg-gray-900 dark:bg-white text-white dark:text-black shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 cursor-pointer"
+                                        : "bg-gray-100 dark:bg-zinc-800 text-gray-300 dark:text-zinc-600 cursor-not-allowed"
+                                    }`}
                             >
                                 <ArrowUp size={18} strokeWidth={2.5} />
                             </button>
                         </div>
                     </div>
                 </motion.div>
-                
+
                 {/* Footer hints */}
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.5 }}
                     className="flex flex-wrap justify-center gap-4 text-xs text-gray-400 dark:text-zinc-600 font-medium"
                 >
                     <div className="flex items-center gap-1.5">
-                        <span className="px-1.5 py-0.5 rounded border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900 text-[10px]"><Command size={10}/></span>
+                        <span className="px-1.5 py-0.5 rounded border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900 text-[10px]"><Command size={10} /></span>
                         <span>+</span>
                         <span className="px-1.5 py-0.5 rounded border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900 text-[10px]">Enter</span>
                         <span className="opacity-70 ml-1">to send</span>
