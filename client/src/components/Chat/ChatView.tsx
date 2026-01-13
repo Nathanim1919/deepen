@@ -31,7 +31,6 @@ export const ChatView = () => {
             key={index}
             role={msg.role}
             content={msg.content}
-            references={msg.references}
           />
         ))}
         <div ref={messagesEndRef} />
