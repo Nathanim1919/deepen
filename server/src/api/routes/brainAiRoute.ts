@@ -12,7 +12,7 @@ router.post("/conversation/:conversationId/message", BrainChatController.sendMes
 router.get("/conversation/:conversationId/message", BrainChatController.sendMessage);
 
 // conversation summary
-router.post("/conversation/summary", (req, res) => {
+router.post("/conversation/summary", (_req, res) => {
   res.send("Hello World");
 });
 
@@ -21,12 +21,12 @@ router.get("/conversations", BrainChatController.conversationsList);
 
 
 // delete conversation
-router.delete("/conversation/delete", (req, res) => {
+router.delete("/conversation/delete", (_req, res) => {
   res.send("Hello World");
 });
 
 // delete all conversations
-router.delete("/conversation/delete-all", (req, res) => {
+router.delete("/conversation/delete-all", (_req, res) => {
   res.send("Hello World");
 });
 

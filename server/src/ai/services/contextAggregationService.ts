@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 import { Capture } from '../../common/models/Capture';
-import { Collection } from '../../common/models/Collection';
-import { searchSimilar } from './vectorStore';
+import Collection from '../../common/models/Collection';
+import { ragSearch } from './vectorStore';
 import { logger } from '../../common/utils/logger';
 
 export interface ContextQuery {
@@ -45,7 +45,7 @@ export class ContextAggregationService {
    */
   static async aggregateContext(query: ContextQuery): Promise<AggregatedContext> {
     try {
-      const { userId, contextType, contextItems, query: searchQuery } = query;
+      const { userId, contextType, contextItems = [], query: searchQuery } = query;
 
       let captureIds: Types.ObjectId[] = [];
       let sources: AggregatedContext['sources'] = [];
@@ -115,12 +115,13 @@ export class ContextAggregationService {
       query.format = { $in: filters.contentTypes };
     }
 
-    const captures = await Capture.find(query)
+    type CaptureId = { _id: Types.ObjectId };
+    const captures = await Capture.find<CaptureId>(query)
       .select('_id')
       .limit(1000) // Reasonable limit for "all" context
       .lean();
 
-    return captures.map(c => c._id);
+    return captures.map(c => new Types.ObjectId(c._id as unknown as Types.ObjectId));
   }
 
   /**
@@ -128,21 +129,22 @@ export class ContextAggregationService {
    */
   private static async getCollectionCaptures(
     userId: string,
-    contextItems: ContextQuery['contextItems']
+    contextItems: ContextQuery['contextItems'] = []
   ): Promise<Types.ObjectId[]> {
     const collectionIds = contextItems
       .filter(item => item.type === 'collection')
       .map(item => item.id);
 
-    const collections = await Collection.find({
+    type CollectionCaptureField = { captures?: Types.ObjectId[] };
+    const collections = await Collection.find<CollectionCaptureField>({
       _id: { $in: collectionIds },
       user: new Types.ObjectId(userId)
     }).select('captures').lean();
 
     const captureIds: Types.ObjectId[] = [];
     collections.forEach(collection => {
-      if (collection.captures) {
-        captureIds.push(...collection.captures);
+      if (collection.captures?.length) {
+        captureIds.push(...collection.captures.map(c => new Types.ObjectId(c)));
       }
     });
 
@@ -169,12 +171,13 @@ export class ContextAggregationService {
       };
     }
 
-    const captures = await Capture.find(query)
+    type CaptureId = { _id: Types.ObjectId };
+    const captures = await Capture.find<CaptureId>(query)
       .select('_id')
       .limit(500)
       .lean();
 
-    return captures.map(c => c._id);
+    return captures.map(c => new Types.ObjectId(c._id as unknown as Types.ObjectId));
   }
 
   /**
@@ -182,20 +185,21 @@ export class ContextAggregationService {
    */
   private static async getSpecificCaptures(
     userId: string,
-    contextItems: ContextQuery['contextItems']
+    contextItems: ContextQuery['contextItems'] = []
   ): Promise<Types.ObjectId[]> {
     const captureIds = contextItems
       .filter(item => item.type === 'capture')
       .map(item => item.id);
 
     // Verify ownership
-    const captures = await Capture.find({
+    type CaptureId = { _id: Types.ObjectId };
+    const captures = await Capture.find<CaptureId>({
       _id: { $in: captureIds },
       owner: new Types.ObjectId(userId),
       status: 'active'
     }).select('_id').lean();
 
-    return captures.map(c => c._id);
+    return captures.map(c => new Types.ObjectId(c._id as unknown as Types.ObjectId));
   }
 
   /**
@@ -203,7 +207,7 @@ export class ContextAggregationService {
    */
   private static async getMixedCaptures(
     userId: string,
-    contextItems: ContextQuery['contextItems']
+    contextItems: ContextQuery['contextItems'] = []
   ): Promise<Types.ObjectId[]> {
     const [collectionCaptures, specificCaptures] = await Promise.all([
       this.getCollectionCaptures(userId, contextItems),
@@ -222,12 +226,13 @@ export class ContextAggregationService {
   ): Promise<AggregatedContext['sources']> {
     if (captureIds.length === 0) return [];
 
-    const captures = await Capture.find({
+    type CaptureMeta = { _id: Types.ObjectId; title?: string; url?: string };
+    const captures = await Capture.find<CaptureMeta>({
       _id: { $in: captureIds }
     }).select('_id title url format').lean();
 
     return captures.map(capture => ({
-      id: capture._id,
+      id: new Types.ObjectId(capture._id as unknown as Types.ObjectId),
       type: 'capture' as const,
       title: capture.title || capture.url || 'Untitled',
       relevanceScore: contextType === 'all' ? 0.5 : 1.0 // Higher score for explicitly selected items
@@ -248,19 +253,17 @@ export class ContextAggregationService {
     }
 
     try {
-      // Use existing vector search but with multiple document IDs
-      // This assumes the vectorStore.searchSimilar can handle multiple documentIds
-      const searchResults = await searchSimilar({
+      const searchResults = await ragSearch({
         query,
         userId,
-        documentIds: captureIds.map(id => id.toString()), // Convert to strings if needed
+        documentIds: captureIds.map(id => id.toString()),
         limit,
-        userApiKey: '' // Will need to be passed from caller
+        userApiKey: '' // TODO: supply real user API key when available
       });
 
-      return searchResults.map((result: any) => ({
-        text: result.payload?.text || '',
-        sourceId: new Types.ObjectId(result.documentId),
+      return searchResults.map(result => ({
+        text: result.text || '',
+        sourceId: new Types.ObjectId(result.docId),
         sourceType: 'capture' as const,
         similarity: result.score || 0
       }));
