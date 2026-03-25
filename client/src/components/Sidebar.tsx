@@ -27,6 +27,11 @@ const navItems = [
     label: "Bookmarks",
     path: "/in/bookmarks",
   },
+  // {
+  //   icon: <FaFileAlt />,
+  //   label: "Files",
+  //   path: "/in/files",
+  // },
   {
     icon: <Brain />,
     label: "Brain",

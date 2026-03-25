@@ -34,7 +34,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://deepen.live",
+      "https://deepen.nathanim.dev",
       "https://www.deepen.live",
       "https://deepen-ten.vercel.app",
     ],
