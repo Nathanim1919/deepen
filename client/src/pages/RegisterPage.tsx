@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "@tanstack/react-router";
-import { User, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { User, Mail, Lock, Eye, EyeOff, ArrowRight, MoveLeft } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
 import { useState } from "react";
@@ -9,8 +9,12 @@ import { getPostAuthCallbackUrl } from "../lib/auth-callback-url";
 import { toast } from "sonner";
 import ImageForDark from "../assets/img1.png";
 import ImageForLight from "../assets/img2.png";
+import { useUIStore } from "../stores/ui-store";
 
-const isDarkMode = true;
+const useDarkMode = () => {
+  const { theme } = useUIStore();
+  return theme === "dark";
+}
 
 export const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -101,32 +105,37 @@ export const RegisterPage = () => {
   return (
     <div className="min-h-screen relative grid grid-cols-1 md:grid-cols-[.8fr_1.25fr]">
       <div
-        className="h-full w-full relative overflow-hidden
-        before:absolute before:w-[30%] before:h-[30%]  before:content-[''] before:bg-[#837663] before:blur-3xl
-        after:absolute after:w-[30%] after:h-[30%]  after:content-[''] after:bg-[#474847] after:bottom-0 after:right-0 after:blur-3xl
+        className="h-full w-full relative overflow-hidden hidden md:block
+ 
       "
       >
-        <div className="h-full w-full bg-[#6b6d6a1f] grid grid-rows-2 p-4 relative z-100 backdrop-blur-3xl justify-center items-center">
-          <img
-            src={isDarkMode ? ImageForDark : ImageForLight}
+  <img
+            src={useDarkMode() ? ImageForDark : ImageForLight}
             alt="Background Image"
-            className="w-full  object-cover  absolute top-[10%] -right-[40%] z-10"
+            className="w-full object-cover  absolute top-[30%] -right-[50%] z-10"
           />
+         
+
+        <div className="h-full w-full z-100 grid place-content-end">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2, type: "spring" }}
-            className="absolute top-6 left-6"
+            className="z-1000 cursor-pointer absolute top-4 left-4"
           >
             <Link
               to="/"
-              className="text-[#ffffff] hover:text-[#64b5ff] transition-colors flex items-center gap-1.5 group"
+              className="dark:text-[#ffffff] text-[#000000] hover:text-[#64b5ff] transition-colors flex items-center gap-1.5 group"
             >
-              <span className="text-sm font-medium">Back</span>
+              <span className="text-sm font-medium flex items-center gap-1">
+                <MoveLeft/>
+              </span>
             </Link>
           </motion.div>
+      
+         <div className="flex flex-col justify-around h-screen bg-gradient-to-t  dark:from-black from-white to-transparent p-6 absolute bottom-0 left-0 z-100">
 
-          <div className="flex items-center flex-wrap gap-4 text-4xl text-gray-500 font-bold relative z-100">
+          <div className="flex flex-col items-start font-bold relative z-100">
             <motion.h1
               initial={{
                 opacity: 0,
@@ -140,11 +149,11 @@ export const RegisterPage = () => {
                 left: 0,
                 duration: 2.5,
               }}
-              className="text-4xl relative font-bold text-left leading-tight text-black dark:text-blue-500"
+              className="text-6xl relative font-bold text-left leading-tight dark:text-black text-white dark:bg-white bg-black px-2 shadow-2xl"
             >
               Capture
             </motion.h1>
-            From The Web and
+            
             <motion.h1
               initial={{
                 opacity: 0,
@@ -158,11 +167,11 @@ export const RegisterPage = () => {
                 left: 0,
                 duration: 2.5,
               }}
-              className="text-4xl relative font-bold text-left leading-tight text-black dark:text-violet-500"
+              className="text-6xl ml-4 relative font-bold text-left leading-tight text-black dark:text-gray-400"
             >
               Organize
             </motion.h1>
-            to
+            
             <motion.h1
               initial={{
                 opacity: 0,
@@ -175,10 +184,11 @@ export const RegisterPage = () => {
               transition={{
                 duration: 0.5,
               }}
-              className="text-4xl relative font-bold text-left leading-tight text-black dark:text-orange-500"
+              className="text-6xl relative font-bold text-left leading-tight  dark:text-black text-white dark:bg-white bg-black px-2 shadow-2xl"
             >
               Understand{" "}
             </motion.h1>
+            
             <motion.h1
               initial={{
                 opacity: 0,
@@ -191,22 +201,22 @@ export const RegisterPage = () => {
               transition={{
                 duration: 0.5,
               }}
-              className="text-4xl relative font-bold text-left leading-tight text-black dark:text-white"
+              className="text-6xl ml-4 relative font-bold text-left leading-tight text-black dark:text-gray-400"
             >
               Instantly.
             </motion.h1>
           </div>
-          <div className="text-center">
-            <div className="relative flex items-center justify-center">
+          <div className="grid gap-1">
+            <div className="relative flex items-center">
               <div className="flex items-center justify-center">
-                <div className="w-10 h-10 rounded-full bg-gray-500 relative border-2 border-black"></div>
-                <div className="w-10 h-10 rounded-full bg-gray-500 relative border-2 border-black -left-5"></div>
-                <div className="w-10 h-10 rounded-full bg-gray-500 relative border-2 border-black -left-10"></div>
-                <div className="w-10 h-10 rounded-full bg-gray-500 relative border-2 border-black -left-15"></div>
-                <div className="w-10 h-10 rounded-full bg-gray-500 relative border-2 border-black -left-20"></div>
+                <div className="w-10 h-10 rounded-full dark:bg-gray-500 bg-gray-200 relative border-2 dark:border-black border-gray-100"></div>
+                <div className="w-10 h-10 rounded-full dark:bg-gray-500 bg-gray-200 relative border-2 dark:border-black border-gray-100 -left-5"></div>
+                <div className="w-10 h-10 rounded-full dark:bg-gray-500 bg-gray-200 relative border-2 dark:border-black border-gray-100 -left-10"></div>
+                 <div className="w-10 h-10 rounded-full dark:bg-gray-500 bg-gray-200 relative border-2 dark:border-black border-gray-100 -left-15"></div>
+                <div className="w-10 h-10 rounded-full dark:bg-gray-500 bg-gray-200 relative border-2 dark:border-black border-gray-100 -left-20"></div> 
               </div>
               <h2 className="text-2xl font-bold text-center relative -left-18">
-                Join 1200+ users
+                Join <span className="dark:text-black text-white dark:bg-white bg-black shadow-2xl px-2">100+</span> users
               </h2>
             </div>
             <p className="text-sm text-gray-500">
@@ -215,6 +225,7 @@ export const RegisterPage = () => {
             </p>
           </div>
         </div>
+</div>
       </div>
 
       {/* Elevated registration card with glass morphism effect */}
@@ -231,12 +242,12 @@ export const RegisterPage = () => {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, type: "spring" }}
-              className="text-center mb-8"
+              className="text-center mb-8 grid place-items-center"
             >
-              <h1 className="text-2xl font-semibold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-[#ffffff] to-[#a1a1a6]">
+              <h1 className="text-2xl font-semibold mb-2 bg-clip-text text-transparent bg-gradient-to-r dark:from-[#ffffff] from-[#000000] to-[#a1a1a6]">
                 Create Account
               </h1>
-              <p className="text-[#aeaeb2]/80 text-sm">Join our community</p>
+              <p className="text-gray-200 font-bold px-2 dark:text-black text-sm bg-black dark:bg-white">Join our community</p>
             </motion.div>
 
             {/* Registration Form */}
@@ -247,14 +258,14 @@ export const RegisterPage = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, type: "spring" }}
               >
-                <label className="block text-xs font-medium text-[#aeaeb2]/80 mb-2 uppercase tracking-wider">
+                <label className="block text-xs font-medium darK:text-[#aeaeb2]/80  mb-2 uppercase tracking-wider">
                   Full Name
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#636366]/80 w-4 h-4" />
                   <input
                     type="text"
-                    className="w-full pl-9 pr-4 py-2.5 bg-[#2c2c2e]/70 rounded-lg focus:ring-2 focus:ring-[#0071e3]/50 focus:outline-none border border-[#3a3a3c]/50 hover:border-[#3a3a3c] transition-all text-sm placeholder-[#636366]/50"
+                    className="w-full pl-9 pr-4 py-2.5 dark:bg-[#2c2c2e]/70 bg-[#eee] rounded-lg focus:ring-2 focus:ring-[#0071e3]/50 focus:outline-none border border-[#3a3a3c]/50 hover:border-[#3a3a3c] transition-all text-sm placeholder-[#636366]/50"
                     placeholder="John Doe"
                     value={formData.name}
                     onChange={(e) =>
@@ -279,7 +290,7 @@ export const RegisterPage = () => {
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#636366]/80 w-4 h-4" />
                   <input
                     type="email"
-                    className="w-full pl-9 pr-4 py-2.5 bg-[#2c2c2e]/70 rounded-lg focus:ring-2 focus:ring-[#0071e3]/50 focus:outline-none border border-[#3a3a3c]/50 hover:border-[#3a3a3c] transition-all text-sm placeholder-[#636366]/50"
+                    className="w-full pl-9 pr-4 py-2.5 dark:bg-[#2c2c2e]/70 bg-[#eee] rounded-lg focus:ring-2 focus:ring-[#0071e3]/50 focus:outline-none border border-[#3a3a3c]/50 hover:border-[#3a3a3c] transition-all text-sm placeholder-[#636366]/50"
                     placeholder="your@email.com"
                     value={formData.email}
                     onChange={(e) =>
@@ -304,7 +315,7 @@ export const RegisterPage = () => {
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#636366]/80 w-4 h-4" />
                   <input
                     type={showPassword ? "text" : "password"}
-                    className="w-full pl-9 pr-10 py-2.5 bg-[#2c2c2e]/70 rounded-lg focus:ring-2 focus:ring-[#0071e3]/50 focus:outline-none border border-[#3a3a3c]/50 hover:border-[#3a3a3c] transition-all text-sm placeholder-[#636366]/50"
+                    className="w-full pl-9 pr-10 py-2.5 dark:bg-[#2c2c2e]/70 bg-[#eee] rounded-lg focus:ring-2 focus:ring-[#0071e3]/50 focus:outline-none border border-[#3a3a3c]/50 hover:border-[#3a3a3c] transition-all text-sm placeholder-[#636366]/50"
                     placeholder="••••••••"
                     value={formData.password}
                     onChange={(e) =>
@@ -341,13 +352,12 @@ export const RegisterPage = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`w-full py-3 px-6 rounded-lg ${
-                    loading
-                      ? "bg-[#0071e3]/70 cursor-not-allowed"
-                      : "bg-[#0071e3] hover:bg-[#2997ff] cursor-pointer"
-                  } transition-all flex justify-center items-center gap-2 relative overflow-hidden group`}
+                  className={`w-full py-3 px-6 rounded-lg ${loading
+                      ? "dark:bg-[#0071e3]/70 bg-[#0071e3]/70 cursor-not-allowed"
+                      : "dark:bg-[#0071e3] bg-[#0071e3] hover:bg-[#2997ff] cursor-pointer"
+                    } transition-all flex justify-center items-center gap-2 relative overflow-hidden group`}
                 >
-                  <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute inset-0 dark:bg-white/10 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                   {loading ? (
                     <motion.span
                       animate={{ rotate: 360 }}
@@ -382,11 +392,10 @@ export const RegisterPage = () => {
                 disabled={loading}
                 whileHover={{ scale: loading ? 1 : 1.02 }}
                 whileTap={{ scale: loading ? 1 : 0.98 }}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl ${
-                  loading
-                    ? "bg-[#2c2c2e] cursor-not-allowed"
-                    : "bg-[#2c2c2e] hover:bg-[#3a3a3c] cursor-pointer"
-                } transition-all relative overflow-hidden border border-[#3a3a3c]/50`}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl ${loading
+                    ? "dark:bg-[#2c2c2e] bg-[#eee] cursor-not-allowed"
+                    : "dark:bg-[#2c2c2e] bg-[#eee] dark:hover:bg-[#3a3a3c] hover:bg-[#e8e8ea] cursor-pointer"
+                  } transition-all relative overflow-hidden border border-[#3a3a3c]/50`}
               >
                 <div className="absolute inset-0 bg-white/5 opacity-0 hover:opacity-100 transition-opacity" />
                 <FcGoogle className="text-lg" />
@@ -398,14 +407,13 @@ export const RegisterPage = () => {
                 disabled={loading}
                 whileHover={{ scale: loading ? 1 : 1.02 }}
                 whileTap={{ scale: loading ? 1 : 0.98 }}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl ${
-                  loading
-                    ? "bg-[#2c2c2e] cursor-not-allowed"
-                    : "bg-[#2c2c2e] hover:bg-[#3a3a3c] cursor-pointer"
-                } transition-all relative overflow-hidden border border-[#3a3a3c]/50`}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl ${loading
+                    ? "dark:bg-[#2c2c2e] bg-[#eee] cursor-not-allowed"
+                    : "dark:bg-[#2c2c2e] bg-[#eee] dark:hover:bg-[#3a3a3c] hover:bg-[#e8e8ea] cursor-pointer"
+                  } transition-all relative overflow-hidden border border-[#3a3a3c]/50`}
               >
                 <div className="absolute inset-0 bg-white/5 opacity-0 hover:opacity-100 transition-opacity" />
-                <FaGithub className="text-lg text-[#f5f5f7]" />
+                <FaGithub className="text-lg dark:text-[#f5f5f7] text-[#000000]" />
                 <span className="text-sm font-medium">GitHub</span>
               </motion.button>
             </motion.div>
@@ -432,9 +440,8 @@ export const RegisterPage = () => {
             >
               <Link
                 to="/login"
-                className={`block w-full text-center py-2.5 px-6 rounded-lg font-medium text-sm text-[#2997ff] border border-[#3a3a3c]/50 hover:bg-[#2c2c2e]/50 transition-colors ${
-                  loading ? "cursor-not-allowed" : "cursor-pointer"
-                }`}
+                className={`block w-full text-center py-2.5 px-6 rounded-lg font-medium text-sm dark:text-[#2997ff] text-[#000000] border border-[#3a3a3c]/50 hover:bg-[#e8e8ea] dark:hover:bg-[#3a3a3c]/50 transition-colors ${loading ? "cursor-not-allowed" : "cursor-pointer"
+                  }`}
               >
                 Sign in to your account
               </Link>
