@@ -93,7 +93,7 @@ export const LoginPage = () => {
   const handleGithubSignIn = () => handleSocialSignIn("github");
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-[#f5f5f7] flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen dark:bg-[#0a0a0a] bg-[#ffffff] text-[#f5f5f7] flex items-center justify-center p-4 relative overflow-hidden">
       {/* Premium dark textured background */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.03)_0%,_transparent_70%)] opacity-20" />
       <div className="absolute inset-0 bg-[linear-gradient(135deg,_rgba(40,151,255,0.03)_0%,_transparent_50%)]" />
@@ -112,7 +112,6 @@ export const LoginPage = () => {
           }`}
         >
           <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-0.5" />
-          <span className="text-sm font-medium">Back</span>
         </Link>
       </motion.div>
 
@@ -123,7 +122,7 @@ export const LoginPage = () => {
         transition={{ delay: 0.1, type: "spring" }}
         className="w-full max-w-md"
       >
-        <div className="rounded-2xl p-8 shadow-2xl overflow-hidden relative">
+        <div className="rounded-2xl p-8  overflow-hidden relative">
           {/* Loading overlay */}
           {disableAll && (
             <div className="absolute inset-0 bg-black/30 z-10 flex items-center justify-center">

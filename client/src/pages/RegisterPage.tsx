@@ -112,7 +112,7 @@ export const RegisterPage = () => {
   <img
             src={useDarkMode() ? ImageForDark : ImageForLight}
             alt="Background Image"
-            className="w-full object-cover  absolute top-[30%] -right-[50%] z-10"
+            className="w-full object-cover  absolute top-[10%] -right-[50%] z-10"
           />
          
 
