@@ -13,14 +13,22 @@ mongo.connect(); // Explicitly connect
 const dbName = "deepen";
 const db = mongo.db(dbName);
 
+const extraTrustedOrigins =
+  process.env.TRUSTED_ORIGINS?.split(",")
+    .map((s) => s.trim())
+    .filter(Boolean) ?? [];
+
 export const auth = betterAuth({
   database: mongodbAdapter(db),
   trustedOrigins: [
-    "https://deepen.nathanim.dev", // Added trusted origin
-    "https://www.deepen.live", // Fixed syntax error
-    "http://localhost:5173", // Replace with your frontend's origin
-    "https://deepen-api.onrender.com", // Added trusted origin
+    "https://deepen.nathanim.dev",
+    "https://deepen.live",
+    "https://www.deepen.live",
+    "http://localhost:5173",
+    "https://deepen-api.onrender.com",
+    "https://deepen-backend2.onrender.com",
     "https://deepen-ten.vercel.app",
+    ...extraTrustedOrigins,
   ],
   advanced: {
     // THIS IS THE FIX

@@ -4,6 +4,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowLeft, Github } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { useState } from "react";
 import { authClient } from "../lib/auth-client";
+import { getPostAuthCallbackUrl } from "../lib/auth-callback-url";
 import { toast } from "sonner";
 
 export const LoginPage = () => {
@@ -14,12 +15,7 @@ export const LoginPage = () => {
     password: "",
   });
 
-  // Compute callback URL: prefer explicit env var, then client base, then runtime origin
-  const CALLBACK_URL =
-    (import.meta.env.VITE_AUTH_CALLBACK_URL as string) + "/in" ||
-    (import.meta.env.VITE_CLIENT_BASE_URL as string) + "/in";
-
-  console.log("CALL BACK URL IS: ", CALLBACK_URL);
+  const CALLBACK_URL = getPostAuthCallbackUrl();
   // Disable all interactive elements when loading
   const disableAll = loading;
 
@@ -32,7 +28,6 @@ export const LoginPage = () => {
       await authClient.signIn.email(
         {
           ...formData,
-          // callbackURL: "https://deepen.live/in",
           callbackURL: CALLBACK_URL,
         },
         {
@@ -69,8 +64,7 @@ export const LoginPage = () => {
     try {
       await authClient.signIn.social({
         provider,
-        // callbackURL: "https://deepen.live/in",
-        callbackURL: "http://localhost:5173/in",
+        callbackURL: CALLBACK_URL,
 
         fetchOptions: {
           onRequest: () => {

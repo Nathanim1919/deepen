@@ -5,6 +5,7 @@ import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
 import { useState } from "react";
 import { authClient } from "../lib/auth-client";
+import { getPostAuthCallbackUrl } from "../lib/auth-callback-url";
 import { toast } from "sonner";
 import ImageForDark from "../assets/img1.png";
 import ImageForLight from "../assets/img2.png";
@@ -21,11 +22,7 @@ export const RegisterPage = () => {
     password: "",
   });
 
-  // same CALLBACK_URL logic
-  const CALLBACK_URL =
-    (import.meta.env.VITE_AUTH_CALLBACK_URL as string) ||
-    ((import.meta.env.VITE_CLIENT_BASE_URL as string) ||
-      window.location.origin) + "/in";
+  const CALLBACK_URL = getPostAuthCallbackUrl();
 
   const handleRegistration = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +60,7 @@ export const RegisterPage = () => {
   const handleGoogleSignIn = async () => {
     await authClient.signIn.social({
       provider: "google",
-      callbackURL: "https://deepen.live/in",
+      callbackURL: CALLBACK_URL,
       fetchOptions: {
         onRequest: () => {
           setLoading(true);
@@ -84,7 +81,7 @@ export const RegisterPage = () => {
   const handleGithubSignIn = async () => {
     await authClient.signIn.social({
       provider: "github",
-      callbackURL: "https://deepen.live/in",
+      callbackURL: CALLBACK_URL,
       fetchOptions: {
         onRequest: () => {
           setLoading(true);
