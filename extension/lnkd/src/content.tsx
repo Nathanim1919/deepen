@@ -1,7 +1,8 @@
 import type { PlasmoCSConfig } from "plasmo"
+
 import { cleanDocument } from "./cleanDocument"
 import { extractMainContent } from "./extractMainContent"
-import { extractHeadings, extractImages, extractLinks, extractMetadata } from "./extractMetadata"
+import { extractHeadings, extractLinks, extractMetadata } from "./extractMetadata"
 import { countWords, estimateReadingTime } from "./utils"
 
 export const config: PlasmoCSConfig = {
@@ -10,9 +11,6 @@ export const config: PlasmoCSConfig = {
 }
 
 console.log("[Lnkd] Clean content script loaded");
-
-export const MAX_TEXT_LENGTH = 100_000;
-export const MIN_TEXT_LENGTH = 100;
 
 
 chrome.runtime.onMessage.addListener((message, _, sendResponse) => {
@@ -44,8 +42,7 @@ chrome.runtime.onMessage.addListener((message, _, sendResponse) => {
           // selectedText: selectedText.slice(0, 2000),
           mainText: content.text,
           extractionMethod: content.method,
-          // links: extractLinks(),
-          // images: extractImages(),
+          links: extractLinks(),
           headings: extractHeadings(),
           timestamp: new Date().toISOString(),
           readingTime: estimateReadingTime(content.text),

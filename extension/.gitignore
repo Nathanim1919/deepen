@@ -11,9 +11,6 @@ build/
 # Plasmo specific
 .plasmo/
 
-# Legacy/archived code (kept locally for reference)
-_legacy/
-
 # IDE
 .vscode/
 .idea/

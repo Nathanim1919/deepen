@@ -1,4 +1,4 @@
-import { MAX_TEXT_LENGTH } from "./content"
+import { MAX_TEXT_LENGTH } from "./constants"
 
 export function cleanText(raw: string): string {
     return raw.replace(/\s+/g, " ").trim().slice(0, MAX_TEXT_LENGTH)

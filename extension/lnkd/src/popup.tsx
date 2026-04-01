@@ -31,11 +31,13 @@ const Popup = () => {
       console.log("Extracted data: ", response)
 
       if (!response?.success) {
-        toast.error("unable to extract the page content")
+        toast.error("Unable to extract the page content")
+        return
       }
 
-      const res = await fetch("http://localhost:3000/api/v1/captures/save", {
+      const res = await fetch(`${process.env.PLASMO_PUBLIC_API_URL}/api/v1/captures/save`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(response)
       })
@@ -76,7 +78,7 @@ const Popup = () => {
           : { message: await res.text() }
 
         if (res.status === 401) {
-          window.open("http://localhost:3000/login", "_blank")
+          window.open(`${process.env.PLASMO_PUBLIC_APP_URL}/login`, "_blank")
           throw new Error("Please authenticate first")
         }
 
@@ -215,7 +217,7 @@ const Popup = () => {
 
         {/* Secondary action */}
         <motion.button
-          onClick={() => window.open("https://deepen.live/in", "_blank")}
+          onClick={() => window.open(`${process.env.PLASMO_PUBLIC_APP_URL}/in`, "_blank")}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           className="plasmo-w-full plasmo-py-3 plasmo-flex plasmo-items-center plasmo-justify-center plasmo-gap-2 plasmo-text-sm plasmo-bg-[#2c2c2e]/60 hover:plasmo-bg-[#3a3a3c]/60 plasmo-rounded-[12px] plasmo-border plasmo-border-[#3a3a3c]/30 plasmo-transition-all plasmo-backdrop-blur-md">

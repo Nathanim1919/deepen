@@ -10,6 +10,7 @@
     "package": "plasmo package"
   },
   "dependencies": {
+    "@mozilla/readability": "^0.6.0",
     "better-auth": "^1.2.10",
     "framer-motion": "^12.19.1",
     "plasmo": "0.90.5",
@@ -32,7 +33,9 @@
   },
   "manifest": {
     "host_permissions": [
-      "http://localhost:3000"
+      "http://localhost:3000/*",
+      "https://api.linkmeld.com/*",
+      "https://linkmeld.com/*"
     ]
   }
 }
