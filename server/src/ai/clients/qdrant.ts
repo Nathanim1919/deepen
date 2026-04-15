@@ -3,7 +3,7 @@ import { logger } from "../../common/utils/logger";
 
 const QDRANT_CLOUD_URL = process.env.QDRANT_CLOUD_URL;
 const QDRANT_API_KEY = process.env.QDRANT_API_KEY;
-const VECTOR_SIZE = 768; // text-embedding-004 output dimensions
+const VECTOR_SIZE = 768; // gemini-embedding-001 output dimensions (with outputDimensionality: 768)
 const COLLECTION_NAME = "documents";
 
 // Log Qdrant configuration (mask API key)

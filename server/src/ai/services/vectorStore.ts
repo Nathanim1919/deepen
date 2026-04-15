@@ -6,7 +6,7 @@ import { logger } from "../../common/utils/logger";
 import { QdrantClient } from "@qdrant/js-client-rest";
 import { withRetry } from "../../common/utils/withRetry";
 import { v4 as uuidv4 } from "uuid";
-const VECTOR_SIZE = 768; // text-embedding-004 output dimensions
+const VECTOR_SIZE = 768; // gemini-embedding-001 output dimensions (with outputDimensionality: 768)
 
 /**
  * Indexes the provided text by chunking it and generating embeddings for each chunk.

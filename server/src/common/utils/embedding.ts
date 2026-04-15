@@ -30,7 +30,7 @@ export async function generateGeminiEmbeddingsWithFetch(
   maxRetries: number = 3,
   initialDelay: number = 2000, // 2 seconds
 ): Promise<number[] | null> {
-  const EMBEDDING_MODEL = "text-embedding-004";
+  const EMBEDDING_MODEL = "gemini-embedding-001";
   const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${EMBEDDING_MODEL}:embedContent?key=${apiKey}`;
 
   logger.info("Generating embeddings with Gemini API...");
@@ -40,6 +40,7 @@ export async function generateGeminiEmbeddingsWithFetch(
       parts: [{ text: text }],
     },
     taskType: taskType,
+    outputDimensionality: 768,
   };
 
   const controller = new AbortController(); // For aborting fetch requests on retry/timeout

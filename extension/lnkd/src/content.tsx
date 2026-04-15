@@ -3,6 +3,7 @@ import type { PlasmoCSConfig } from "plasmo"
 import { cleanDocument } from "./cleanDocument"
 import { extractMainContent } from "./extractMainContent"
 import { extractHeadings, extractLinks, extractMetadata } from "./extractMetadata"
+import { waitForContentReady } from "./lib/contentReady"
 import { countWords, estimateReadingTime } from "./utils"
 
 export const config: PlasmoCSConfig = {
@@ -10,7 +11,7 @@ export const config: PlasmoCSConfig = {
   run_at: "document_end"
 }
 
-console.log("[Lnkd] Clean content script loaded");
+console.log("[Deepen] Content script loaded");
 
 
 chrome.runtime.onMessage.addListener((message, _, sendResponse) => {
@@ -21,9 +22,12 @@ chrome.runtime.onMessage.addListener((message, _, sendResponse) => {
 
         const isPdf = /\.pdf(\?.*)?$/i.test(window.location.href);
 
+        // Wait for SPA content to finish rendering before extracting
+        const readyState = await waitForContentReady()
+
         const clonedDoc = document.cloneNode(true) as Document
         const cleanedDoc = cleanDocument(clonedDoc)
-        const content = extractMainContent(cleanedDoc,isPdf)
+        const content = extractMainContent(cleanedDoc, isPdf)
         const metadata = extractMetadata()
         // const selectedText = window.getSelection()?.toString()?.trim() || ""
 
@@ -41,6 +45,7 @@ chrome.runtime.onMessage.addListener((message, _, sendResponse) => {
           userAgent: navigator.userAgent,
           // selectedText: selectedText.slice(0, 2000),
           mainText: content.text,
+          mainMarkdown: content.markdown,
           extractionMethod: content.method,
           links: extractLinks(),
           headings: extractHeadings(),
@@ -49,13 +54,14 @@ chrome.runtime.onMessage.addListener((message, _, sendResponse) => {
           metrics: {
             wordCount: countWords(content.text),
             textLength: content.text.length,
-            durationMs: performance.now() - start
+            durationMs: performance.now() - start,
+            contentReadyState: readyState,
           },
           isPdf: isPdf
         }
         sendResponse(response)
       } catch (e) {
-        console.error("[Lnkd] Extraction error:", e)
+        console.error("[Deepen] Extraction error:", e)
         sendResponse({ success: false, error: (e as Error).message })
       }
     })()

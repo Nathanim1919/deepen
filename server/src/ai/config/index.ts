@@ -8,7 +8,7 @@ dotenv.config();
 
 export const AI_CONFIG = {
   // Embedding model (still uses Gemini for embeddings)
-  embeddingModel: 'text-embedding-004',
+  embeddingModel: 'gemini-embedding-001',
   
   // General settings
   temperature: 0.3,
