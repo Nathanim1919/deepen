@@ -1,265 +1,590 @@
 import { AnimatePresence, motion } from "framer-motion"
-import { useState } from "react"
-import { FiArrowRight, FiCommand, FiExternalLink, FiSave } from "react-icons/fi"
-import { toast, Toaster } from "sonner"
+import { useCallback, useEffect, useState } from "react"
+
+import { authClient } from "./auth/auth-client"
 
 import "tailwindcss/tailwind.css"
 import "./style.css"
 
-// import "sonner/dist/sonner.min.css"
+// ─── Types ───────────────────────────────────────────────────
 
-const Popup = () => {
-  const [isLoading, setIsLoading] = useState(false)
-  const [isPressed, setIsPressed] = useState(false)
-  const [toastId, setToastId] = useState<string | number | null>(null)
+type CaptureState =
+  | { status: "idle" }
+  | { status: "waiting" }
+  | { status: "extracting" }
+  | { status: "saving" }
+  | { status: "success" }
+  | { status: "duplicate" }
+  | { status: "error"; message: string }
 
-  const handleCapture = async () => {
-    setIsLoading(true)
-    setIsPressed(false)
+type AuthState = "loading" | "authenticated" | "unauthenticated"
+
+interface TabInfo {
+  title: string
+  url: string
+  favIconUrl: string
+  domain: string
+}
+
+interface CaptureItem {
+  _id: string
+  title: string
+  url: string
+  metadata?: { favicon?: string; capturedAt?: string }
+}
+
+// ─── Helpers ─────────────────────────────────────────────────
+
+function getDomain(url: string): string {
+  try {
+    return new URL(url).hostname.replace("www.", "")
+  } catch {
+    return ""
+  }
+}
+
+function truncate(str: string, max: number): string {
+  if (str.length <= max) return str
+  return str.slice(0, max - 1) + "\u2026"
+}
+
+const API_URL = process.env.PLASMO_PUBLIC_API_URL
+const APP_URL = process.env.PLASMO_PUBLIC_APP_URL
+
+// ─── Animation ──────────────────────────────────────────────
+
+const spring = { type: "spring" as const, stiffness: 500, damping: 35, mass: 0.8 }
+
+const fade = {
+  initial: { opacity: 0, y: 6, filter: "blur(4px)" },
+  animate: { opacity: 1, y: 0, filter: "blur(0px)" },
+  exit: { opacity: 0, y: -4, filter: "blur(4px)" },
+  transition: { duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] },
+}
+
+// ─── Logo Mark ──────────────────────────────────────────────
+
+function LogoMark() {
+  return (
+    <div className="plasmo-relative plasmo-w-[30px] plasmo-h-[30px] plasmo-flex plasmo-items-center plasmo-justify-center">
+      {/* Glow behind logo */}
+      <div className="plasmo-absolute plasmo-inset-0 plasmo-rounded-[8px] plasmo-bg-accent-primary/20 plasmo-blur-[6px]" />
+      <div className="plasmo-relative plasmo-w-full plasmo-h-full plasmo-rounded-[8px] plasmo-bg-gradient-to-br plasmo-from-accent-primary plasmo-to-accent-secondary plasmo-flex plasmo-items-center plasmo-justify-center">
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="white"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+        </svg>
+      </div>
+    </div>
+  )
+}
+
+// ─── Page Card ──────────────────────────────────────────────
+
+function PageCard({ tab }: { tab: TabInfo | null }) {
+  if (!tab) {
+    return (
+      <div className="plasmo-rounded-card plasmo-bg-surface-raised plasmo-p-4">
+        <div className="plasmo-flex plasmo-items-center plasmo-gap-3">
+          <div className="plasmo-w-9 plasmo-h-9 plasmo-rounded-[10px] plasmo-bg-surface-subtle plasmo-animate-pulse" />
+          <div className="plasmo-flex-1 plasmo-space-y-2">
+            <div className="plasmo-h-3 plasmo-w-3/4 plasmo-rounded-full plasmo-bg-surface-subtle plasmo-animate-pulse" />
+            <div className="plasmo-h-2.5 plasmo-w-1/2 plasmo-rounded-full plasmo-bg-surface-subtle plasmo-animate-pulse" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className="plasmo-rounded-card plasmo-bg-surface-raised plasmo-p-4 plasmo-border plasmo-border-white/[0.04]">
+      <div className="plasmo-flex plasmo-items-center plasmo-gap-3">
+        {tab.favIconUrl ? (
+          <img
+            src={tab.favIconUrl}
+            alt=""
+            className="plasmo-w-9 plasmo-h-9 plasmo-rounded-[10px] plasmo-bg-surface-subtle plasmo-p-[5px] plasmo-object-contain plasmo-flex-shrink-0"
+          />
+        ) : (
+          <div className="plasmo-w-9 plasmo-h-9 plasmo-rounded-[10px] plasmo-bg-surface-subtle plasmo-flex plasmo-items-center plasmo-justify-center plasmo-text-ink-faint plasmo-text-xs plasmo-font-semibold plasmo-flex-shrink-0">
+            {tab.domain.charAt(0).toUpperCase()}
+          </div>
+        )}
+        <div className="plasmo-min-w-0 plasmo-flex-1">
+          <p className="plasmo-text-[13px] plasmo-font-medium plasmo-text-ink-strong plasmo-leading-[1.3] plasmo-truncate plasmo-tracking-[-0.01em]">
+            {truncate(tab.title || "Untitled", 55)}
+          </p>
+          <p className="plasmo-text-[11px] plasmo-text-ink-faint plasmo-mt-[3px] plasmo-truncate plasmo-tracking-[0.01em]">
+            {tab.domain}
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+// ─── Status Pill ────────────────────────────────────────────
+
+const STATUS_MAP: Record<
+  Exclude<CaptureState["status"], "idle">,
+  { label: string; color: string }
+> = {
+  waiting: { label: "Preparing page\u2026", color: "plasmo-text-ink-muted" },
+  extracting: { label: "Reading content\u2026", color: "plasmo-text-accent-secondary" },
+  saving: { label: "Saving\u2026", color: "plasmo-text-accent-primary" },
+  success: { label: "Saved to library", color: "plasmo-text-success" },
+  duplicate: { label: "Already saved", color: "plasmo-text-warning" },
+  error: { label: "", color: "plasmo-text-error" },
+}
+
+function StatusPill({ state }: { state: CaptureState }) {
+  if (state.status === "idle") return null
+
+  const { label, color } = STATUS_MAP[state.status]
+  const text = state.status === "error" ? state.message : label
+  const isProcessing =
+    state.status === "waiting" ||
+    state.status === "extracting" ||
+    state.status === "saving"
+
+  return (
+    <motion.div {...fade} className="plasmo-flex plasmo-justify-center">
+      <div
+        className={`plasmo-inline-flex plasmo-items-center plasmo-gap-2 plasmo-px-3.5 plasmo-py-[7px] plasmo-rounded-pill plasmo-bg-surface-raised plasmo-border plasmo-border-white/[0.04] ${color}`}>
+        {isProcessing && (
+          <div className="plasmo-w-3 plasmo-h-3 plasmo-border-[1.5px] plasmo-border-current plasmo-border-t-transparent plasmo-rounded-full spin-smooth" />
+        )}
+        {state.status === "success" && (
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+            <path d="M3 8.5l3.5 3.5 6.5-8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        )}
+        <span className="plasmo-text-[12px] plasmo-font-medium plasmo-tracking-[-0.01em]">
+          {text}
+        </span>
+      </div>
+    </motion.div>
+  )
+}
+
+// ─── Capture Button ─────────────────────────────────────────
+
+function CaptureButton({
+  state,
+  onClick,
+}: {
+  state: CaptureState
+  onClick: () => void
+}) {
+  const isActive =
+    state.status === "waiting" ||
+    state.status === "extracting" ||
+    state.status === "saving"
+  const isDone = state.status === "success" || state.status === "duplicate"
+
+  const label = isActive
+    ? "Capturing\u2026"
+    : isDone
+      ? "Capture Again"
+      : "Capture This Page"
+
+  return (
+    <div className="plasmo-relative">
+      {/* Glow effect under button */}
+      {!isActive && !isDone && (
+        <div className="plasmo-absolute plasmo-inset-x-4 plasmo-bottom-0 plasmo-h-8 plasmo-bg-accent-primary/20 plasmo-blur-xl plasmo-rounded-full" />
+      )}
+      <motion.button
+        onClick={onClick}
+        disabled={isActive}
+        whileHover={!isActive ? { scale: 1.01, y: -1 } : {}}
+        whileTap={!isActive ? { scale: 0.985 } : {}}
+        transition={spring}
+        className={`plasmo-relative plasmo-w-full plasmo-py-[13px] plasmo-rounded-btn plasmo-text-[14px] plasmo-font-semibold plasmo-tracking-[-0.02em] plasmo-transition-all plasmo-duration-300 plasmo-outline-none ${
+          isActive
+            ? "plasmo-bg-surface-subtle plasmo-text-ink-muted plasmo-cursor-wait"
+            : isDone
+              ? "plasmo-bg-surface-subtle plasmo-text-ink-muted hover:plasmo-bg-surface-overlay hover:plasmo-text-ink-base"
+              : "plasmo-bg-gradient-to-r plasmo-from-accent-primary plasmo-to-accent-secondary plasmo-text-white plasmo-shadow-glow hover:plasmo-shadow-glow-lg"
+        }`}>
+        <span className="plasmo-relative plasmo-z-10">{label}</span>
+      </motion.button>
+    </div>
+  )
+}
+
+// ─── Sign In Button ─────────────────────────────────────────
+
+function SignInButton() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className="plasmo-rounded-card plasmo-bg-surface-raised plasmo-border plasmo-border-white/[0.04] plasmo-p-4 plasmo-text-center">
+      <p className="plasmo-text-[12px] plasmo-text-ink-muted plasmo-mb-3">
+        Sign in to start capturing
+      </p>
+      <motion.button
+        onClick={() => window.open(`${APP_URL}/login`, "_blank")}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        transition={spring}
+        className="plasmo-w-full plasmo-py-[10px] plasmo-rounded-btn plasmo-text-[13px] plasmo-font-semibold plasmo-tracking-[-0.02em] plasmo-bg-gradient-to-r plasmo-from-accent-primary plasmo-to-accent-secondary plasmo-text-white plasmo-shadow-glow">
+        Sign In
+      </motion.button>
+    </motion.div>
+  )
+}
+
+// ─── Recent Captures ────────────────────────────────────────
+
+function RecentCaptures({
+  captures,
+  loading,
+}: {
+  captures: CaptureItem[]
+  loading: boolean
+}) {
+  if (loading) {
+    return (
+      <div className="plasmo-rounded-card plasmo-bg-surface-raised plasmo-border plasmo-border-white/[0.04] plasmo-p-3 plasmo-space-y-2">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="plasmo-flex plasmo-items-center plasmo-gap-2.5 plasmo-py-1">
+            <div className="plasmo-w-5 plasmo-h-5 plasmo-rounded-[5px] plasmo-bg-surface-subtle plasmo-animate-pulse plasmo-flex-shrink-0" />
+            <div className="plasmo-flex-1 plasmo-space-y-1.5">
+              <div className="plasmo-h-2.5 plasmo-w-3/4 plasmo-rounded-full plasmo-bg-surface-subtle plasmo-animate-pulse" />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (captures.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+        className="plasmo-rounded-card plasmo-bg-surface-raised plasmo-border plasmo-border-white/[0.04] plasmo-p-4 plasmo-text-center">
+        <div className="plasmo-text-[20px] plasmo-mb-1.5">&#10024;</div>
+        <p className="plasmo-text-[12px] plasmo-text-ink-muted plasmo-leading-[1.5]">
+          Capture your very first content<br />and see the magic
+        </p>
+      </motion.div>
+    )
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className="plasmo-rounded-card plasmo-bg-surface-raised plasmo-border plasmo-border-white/[0.04] plasmo-p-1.5">
+      <div className="plasmo-flex plasmo-items-center plasmo-justify-between plasmo-px-2.5 plasmo-pt-1.5 plasmo-pb-1">
+        <span className="plasmo-text-[10px] plasmo-font-medium plasmo-uppercase plasmo-tracking-[0.05em] plasmo-text-ink-faint">
+          Recent
+        </span>
+      </div>
+      {captures.map((capture, i) => (
+        <motion.button
+          key={capture._id}
+          onClick={() =>
+            window.open(`${APP_URL}/in/captures/${capture._id}`, "_blank")
+          }
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: i * 0.05 }}
+          className="plasmo-w-full plasmo-flex plasmo-items-center plasmo-gap-2.5 plasmo-px-2.5 plasmo-py-[7px] plasmo-rounded-[8px] hover:plasmo-bg-white/[0.03] plasmo-transition-colors plasmo-duration-150 plasmo-text-left">
+          {capture.metadata?.favicon ? (
+            <img
+              src={capture.metadata.favicon}
+              alt=""
+              className="plasmo-w-[18px] plasmo-h-[18px] plasmo-rounded-[4px] plasmo-bg-surface-subtle plasmo-p-[2px] plasmo-object-contain plasmo-flex-shrink-0"
+            />
+          ) : (
+            <div className="plasmo-w-[18px] plasmo-h-[18px] plasmo-rounded-[4px] plasmo-bg-surface-subtle plasmo-flex plasmo-items-center plasmo-justify-center plasmo-text-ink-faint plasmo-text-[8px] plasmo-font-semibold plasmo-flex-shrink-0">
+              {getDomain(capture.url).charAt(0).toUpperCase()}
+            </div>
+          )}
+          <span className="plasmo-text-[12px] plasmo-text-ink-base plasmo-truncate plasmo-leading-[1.3]">
+            {truncate(capture.title || "Untitled", 45)}
+          </span>
+        </motion.button>
+      ))}
+    </motion.div>
+  )
+}
+
+// ─── Main Popup ─────────────────────────────────────────────
+
+function Popup() {
+  const [state, setState] = useState<CaptureState>({ status: "idle" })
+  const [tab, setTab] = useState<TabInfo | null>(null)
+  const [authState, setAuthState] = useState<AuthState>("loading")
+  const [recentCaptures, setRecentCaptures] = useState<CaptureItem[]>([])
+  const [capturesLoading, setCapturesLoading] = useState(true)
+  const [hadNoCaptures, setHadNoCaptures] = useState(false)
+
+  // Check auth and fetch recent captures
+  useEffect(() => {
+    ;(async () => {
+      try {
+        const { data: session } = await authClient.getSession()
+        if (session) {
+          setAuthState("authenticated")
+          fetchRecentCaptures()
+        } else {
+          setAuthState("unauthenticated")
+          setCapturesLoading(false)
+        }
+      } catch {
+        setAuthState("unauthenticated")
+        setCapturesLoading(false)
+      }
+    })()
+  }, [])
+
+  async function fetchRecentCaptures() {
+    try {
+      setCapturesLoading(true)
+      const res = await fetch(`${API_URL}/api/v1/captures?limit=3`, {
+        credentials: "include",
+      })
+      if (res.ok) {
+        const json = await res.json()
+        const captures = Array.isArray(json.data) ? json.data : []
+        setRecentCaptures(captures.slice(0, 3))
+        if (captures.length === 0) setHadNoCaptures(true)
+      }
+    } catch {
+      // silently fail — captures section just won't show
+    } finally {
+      setCapturesLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    chrome.tabs.query({ active: true, currentWindow: true }, ([activeTab]) => {
+      if (!activeTab?.url) return
+      setTab({
+        title: activeTab.title || "",
+        url: activeTab.url,
+        favIconUrl: activeTab.favIconUrl || "",
+        domain: getDomain(activeTab.url),
+      })
+    })
+  }, [])
+
+  // Navigate to captures page on first-ever capture success
+  useEffect(() => {
+    if (state.status === "success" && hadNoCaptures) {
+      setHadNoCaptures(false)
+      const timer = setTimeout(() => {
+        window.open(`${APP_URL}/in/captures`, "_blank")
+      }, 1200)
+      return () => clearTimeout(timer)
+    }
+  }, [state.status, hadNoCaptures])
+
+  // Refresh captures list after successful capture
+  useEffect(() => {
+    if (state.status === "success" && authState === "authenticated") {
+      fetchRecentCaptures()
+    }
+  }, [state.status, authState])
+
+  useEffect(() => {
+    if (
+      state.status === "success" ||
+      state.status === "duplicate" ||
+      state.status === "error"
+    ) {
+      const timer = setTimeout(
+        () => setState({ status: "idle" }),
+        state.status === "error" ? 5000 : 3000
+      )
+      return () => clearTimeout(timer)
+    }
+  }, [state.status])
+
+  const handleCapture = useCallback(async () => {
+    if (
+      state.status !== "idle" &&
+      state.status !== "success" &&
+      state.status !== "duplicate" &&
+      state.status !== "error"
+    )
+      return
 
     try {
-      const [tab] = await chrome.tabs.query({
+      const [activeTab] = await chrome.tabs.query({
         active: true,
-        currentWindow: true
+        currentWindow: true,
       })
-      if (!tab?.id) throw new Error("No active tab found")
-
-      const response = await new Promise((resolve) => {
-        chrome.tabs.sendMessage(tab.id!, { action: "extractPageData" }, resolve)
-      })
-
-      console.log("Extracted data: ", response)
-
-      if (!response?.success) {
-        toast.error("Unable to extract the page content")
+      if (!activeTab?.id) {
+        setState({ status: "error", message: "No active tab found" })
         return
       }
 
-      const res = await fetch(`${process.env.PLASMO_PUBLIC_API_URL}/api/v1/captures/save`, {
+      const restricted = [
+        "chrome://",
+        "about:",
+        "chrome-extension://",
+        "https://chrome.google.com/",
+      ]
+      if (restricted.some((p) => activeTab.url?.startsWith(p))) {
+        setState({ status: "error", message: "Can\u2019t capture browser pages" })
+        return
+      }
+
+      setState({ status: "waiting" })
+
+      const response: any = await new Promise((resolve, reject) => {
+        const timeout = setTimeout(
+          () => reject(new Error("Page didn\u2019t respond. Try refreshing.")),
+          15000
+        )
+        chrome.tabs.sendMessage(
+          activeTab.id!,
+          { action: "extractPageData" },
+          (res) => {
+            clearTimeout(timeout)
+            if (chrome.runtime.lastError) {
+              reject(new Error("Can\u2019t access this page"))
+              return
+            }
+            resolve(res)
+          }
+        )
+      })
+
+      setState({ status: "extracting" })
+
+      if (!response?.success) {
+        setState({
+          status: "error",
+          message: response?.error || "Extraction failed",
+        })
+        return
+      }
+
+      setState({ status: "saving" })
+
+      const res = await fetch(`${API_URL}/api/v1/captures/save`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(response)
+        body: JSON.stringify(response),
       })
 
       if (res.status === 409) {
-        const errorText = await res.text()
-        console.log("Ressponse is:", res)
-        toast.error("Content already exists", {
-          // id: newToastId,
-          position: "top-center",
-          style: {
-            background: "rgba(28, 28, 30, 0.9)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            border: "1px solid rgba(255, 69, 58, 0.3)",
-            color: "#f5f5f7",
-            borderRadius: "14px",
-            padding: "14px 18px",
-            fontSize: "14px"
-          },
-          icon: (
-            <motion.div
-              animate={{ x: [0, -3, 3, -3, 0] }}
-              transition={{ duration: 0.4 }}
-              className="plasmo-text-red-500">
-              ⚠️
-            </motion.div>
-          )
-        })
+        setState({ status: "duplicate" })
+        return
+      }
+
+      if (res.status === 401) {
+        window.open(`${APP_URL}/login`, "_blank")
+        setState({ status: "error", message: "Please sign in first" })
         return
       }
 
       if (!res.ok) {
         const contentType = res.headers.get("content-type") || ""
-        const isJson = contentType.includes("application/json")
-        const errorData = isJson
+        const errData = contentType.includes("json")
           ? await res.json()
           : { message: await res.text() }
-
-        if (res.status === 401) {
-          window.open(`${process.env.PLASMO_PUBLIC_APP_URL}/login`, "_blank")
-          throw new Error("Please authenticate first")
-        }
-
-        throw new Error(errorData.message || "Failed to save content")
+        setState({
+          status: "error",
+          message: errData.message || `Server error (${res.status})`,
+        })
+        return
       }
 
-      toast.success("Saved to your knowledge base", {
-        // id: newToastId,
-        position: "top-center",
-        style: {
-          background: "rgba(28, 28, 30, 0.9)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          border: "1px solid rgba(48, 209, 88, 0.3)",
-          color: "#f5f5f7",
-          borderRadius: "14px",
-          padding: "14px 18px",
-          fontSize: "14px"
-        },
-        icon: (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: [0, 1.2, 1] }}
-            transition={{ duration: 0.5, type: "spring" }}
-            className="plasmo-text-green-500 plasmo-text-lg">
-            ✓
-          </motion.div>
-        )
-      })
+      setState({ status: "success" })
     } catch (err: any) {
-      console.error("Error details:", err.message)
-      toast.error(err.message || "An unexpected error occurred")
-    } finally {
-      if (toastId) {
-        toast.dismiss(toastId)
-        setToastId(null)
-      }
-      setIsLoading(false)
-      setIsPressed(false)
+      console.error("[Deepen] Capture error:", err)
+      setState({
+        status: "error",
+        message: err.message || "Something went wrong",
+      })
     }
-  }
+  }, [state.status])
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }}
-      className="plasmo-w-[360px] plasmo-bg-[#1c1c1e]/90 plasmo-backdrop-blur-xl plasmo-text-white plasmo-border plasmo-border-[#2c2c2e]/50 plasmo-shadow-2xl plasmo-overflow-hidden plasmo-font-sans"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className="plasmo-w-[340px] plasmo-bg-surface-base plasmo-text-ink-base plasmo-overflow-hidden"
       style={{
         background:
-          "radial-gradient(circle at 20% 30%, rgba(40, 40, 42, 0.8) 0%, rgba(28, 28, 30, 0.9) 100%)",
-        boxShadow:
-          "0 10px 30px -10px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05)"
+          "radial-gradient(ellipse 120% 80% at 50% 0%, #15141e 0%, #09090b 70%)",
       }}>
-      {/* Header with ultra-thin border */}
-      <div className="plasmo-p-6 plasmo-border-b plasmo-border-[#2c2c2e]/30">
-        <div className="plasmo-flex plasmo-items-center plasmo-space-x-4">
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="plasmo-w-11 plasmo-h-11 plasmo-bg-gradient-to-br plasmo-from-[#0071e3] plasmo-to-[#2997ff] plasmo-rounded-xl plasmo-flex plasmo-items-center plasmo-justify-center plasmo-shadow-inner plasmo-relative plasmo-overflow-hidden">
-            <div className="plasmo-absolute plasmo-inset-0 plasmo-bg-white/10 plasmo-opacity-0 hover:plasmo-opacity-100 plasmo-transition-opacity" />
-            <FiArrowRight className="plasmo-w-5 plasmo-h-5 plasmo-text-white plasmo-opacity-90" />
-          </motion.div>
-          <div>
-            <h1 className="plasmo-text-[26px] plasmo-font-medium plasmo-tracking-tight plasmo-bg-clip-text plasmo-text-transparent plasmo-bg-gradient-to-r plasmo-from-white plasmo-to-[#a1a1a6]">
-              Deepen.
-            </h1>
-            <p className="plasmo-text-[#a1a1a6] plasmo-text-[13px] plasmo-mt-1 plasmo-tracking-wide plasmo-font-light">
-              Capture with intention
-            </p>
-          </div>
-        </div>
-      </div>
 
-      {/* Body */}
-      <div className="plasmo-p-6 plasmo-space-y-4">
-        {/* Primary action button */}
-        <motion.button
-          onClick={handleCapture}
-          disabled={isLoading}
-          whileHover={!isLoading ? { scale: 1.01 } : {}}
-          whileTap={!isLoading ? { scale: 0.98 } : {}}
-          onMouseDown={() => setIsPressed(true)}
-          onMouseUp={() => setIsPressed(false)}
-          onMouseLeave={() => setIsPressed(false)}
-          className={`plasmo-w-full plasmo-flex plasmo-items-center plasmo-justify-center plasmo-gap-3 plasmo-py-4 plasmo-rounded-[14px] plasmo-transition-all plasmo-duration-300 plasmo-relative plasmo-overflow-hidden ${
-            isLoading
-              ? "plasmo-bg-[#0071e3]/70 plasmo-cursor-not-allowed"
-              : "plasmo-bg-gradient-to-b plasmo-from-[#0071e3] plasmo-to-[#0051ba] hover:plasmo-from-[#2997ff] hover:plasmo-to-[#0071e3] plasmo-shadow-lg"
-          }`}>
-          <AnimatePresence>
-            {isPressed && !isLoading && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.15 }}
-                exit={{ opacity: 0 }}
-                className="plasmo-absolute plasmo-inset-0 plasmo-bg-white"
-              />
-            )}
-          </AnimatePresence>
-
-          {/* Subtle glow effect */}
-          <motion.div
-            className="plasmo-absolute plasmo-inset-0 plasmo-bg-[#0071e3]/10 plasmo-opacity-0 group-hover:plasmo-opacity-100 plasmo-transition-opacity plasmo-duration-300"
-            animate={{
-              background: [
-                "rgba(0, 113, 227, 0.1)",
-                "rgba(41, 151, 255, 0.2)",
-                "rgba(0, 113, 227, 0.1)"
-              ]
-            }}
-            transition={{ duration: 3, repeat: Infinity }}
-          />
-
-          {isLoading ? (
-            <>
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
-                className="plasmo-w-5 plasmo-h-5 plasmo-border-2 plasmo-border-white plasmo-border-t-transparent plasmo-rounded-full"
-              />
-              <span className="plasmo-font-medium plasmo-text-white/90">
-                Processing...
-              </span>
-            </>
-          ) : (
-            <>
-              <FiSave className="plasmo-w-5 plasmo-h-5 plasmo-text-white/90 plasmo-transition-transform group-hover:plasmo-scale-110" />
-              <span className="plasmo-font-medium plasmo-text-white/90">
-                Capture This Page
-              </span>
-            </>
-          )}
-        </motion.button>
-
-        {/* Secondary action */}
-        <motion.button
-          onClick={() => window.open(`${process.env.PLASMO_PUBLIC_APP_URL}/in`, "_blank")}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="plasmo-w-full plasmo-py-3 plasmo-flex plasmo-items-center plasmo-justify-center plasmo-gap-2 plasmo-text-sm plasmo-bg-[#2c2c2e]/60 hover:plasmo-bg-[#3a3a3c]/60 plasmo-rounded-[12px] plasmo-border plasmo-border-[#3a3a3c]/30 plasmo-transition-all plasmo-backdrop-blur-md">
-          <span className="plasmo-text-[#f5f5f7] plasmo-font-medium">
-            View Library
+      {/* ── Header ── */}
+      <div className="plasmo-px-5 plasmo-pt-[18px] plasmo-pb-4 plasmo-flex plasmo-items-center plasmo-justify-between">
+        <div className="plasmo-flex plasmo-items-center plasmo-gap-2.5">
+          <LogoMark />
+          <span className="plasmo-text-[17px] plasmo-font-semibold plasmo-tracking-[-0.03em] plasmo-text-ink-strong">
+            Deepen
           </span>
-          <FiExternalLink className="plasmo-w-4 plasmo-h-4 plasmo-text-[#a1a1a6] plasmo-transition-transform group-hover:plasmo-translate-x-0.5" />
-        </motion.button>
+        </div>
 
-        {/* Keyboard shortcut hint */}
-        <div className="plasmo-text-center plasmo-text-xs plasmo-text-[#a1a1a6]/80 plasmo-pt-1 plasmo-font-light plasmo-tracking-wide">
-          Press{" "}
-          <kbd className="plasmo-inline-flex plasmo-items-center plasmo-justify-center plasmo-px-2.5 plasmo-py-1 plasmo-bg-[#2c2c2e] plasmo-rounded-[8px] plasmo-font-medium plasmo-mx-1.5 plasmo-border plasmo-border-[#3a3a3c]/50 plasmo-shadow-sm plasmo-text-[13px]">
-            <FiCommand className="plasmo-w-3 plasmo-h-3 plasmo-mr-1.5 plasmo-text-[#a1a1a6]" />
-            <span className="plasmo-text-[#f5f5f7]">S</span>
-          </kbd>{" "}
-          for quick capture
+        <motion.button
+          onClick={() => window.open(`${APP_URL}/in`, "_blank")}
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.96 }}
+          transition={spring}
+          className="plasmo-px-3 plasmo-py-[5px] plasmo-rounded-pill plasmo-text-[11px] plasmo-font-medium plasmo-tracking-[0.02em] plasmo-uppercase plasmo-text-ink-faint hover:plasmo-text-ink-muted plasmo-bg-white/[0.03] hover:plasmo-bg-white/[0.06] plasmo-border plasmo-border-white/[0.05] plasmo-transition-all plasmo-duration-200"
+          title="Open your library">
+          Library
+        </motion.button>
+      </div>
+
+      {/* ── Content ── */}
+      <div className="plasmo-px-5 plasmo-pb-5 plasmo-space-y-3">
+        <PageCard tab={tab} />
+
+        {/* Auth-aware section */}
+        {authState === "unauthenticated" ? (
+          <SignInButton />
+        ) : authState === "authenticated" ? (
+          <RecentCaptures captures={recentCaptures} loading={capturesLoading} />
+        ) : null}
+
+        <AnimatePresence mode="wait">
+          {state.status !== "idle" && (
+            <StatusPill key={state.status} state={state} />
+          )}
+        </AnimatePresence>
+
+        {authState !== "unauthenticated" && (
+          <CaptureButton state={state} onClick={handleCapture} />
+        )}
+      </div>
+
+      {/* ── Footer ── */}
+      <div className="plasmo-pb-4 plasmo-pt-0">
+        <div className="plasmo-flex plasmo-items-center plasmo-justify-center plasmo-gap-1.5 plasmo-text-[11px] plasmo-text-ink-faint/50">
+          <kbd className="plasmo-px-[6px] plasmo-py-[2px] plasmo-bg-white/[0.03] plasmo-rounded-[4px] plasmo-text-[10px] plasmo-font-medium plasmo-text-ink-faint plasmo-border plasmo-border-white/[0.05]">
+            {"\u2318"}S
+          </kbd>
+          <span>quick capture</span>
         </div>
       </div>
-
-      {/* Footer */}
-      <div className="plasmo-px-6 plasmo-py-4 plasmo-border-t plasmo-border-[#2c2c2e]/30 plasmo-text-[#636366] plasmo-text-[11px] plasmo-text-center plasmo-tracking-wider plasmo-font-light">
-        Designed with  in California
-      </div>
-
-      {/* Toaster component */}
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          style: {
-            background: "rgba(28, 28, 30, 0.9)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            color: "#f5f5f7",
-            border: "1px solid rgba(72, 72, 74, 0.6)",
-            borderRadius: "14px",
-            padding: "14px 18px",
-            fontSize: "14px"
-          },
-          className: "plasmo-z-[9999]"
-        }}
-      />
     </motion.div>
   )
 }
