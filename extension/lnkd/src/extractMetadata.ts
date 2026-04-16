@@ -17,7 +17,15 @@ export function extractMetadata() {
 
 
   export function extractLinks(doc: Document) {
-    return Array.from(doc.querySelectorAll("a[href]"))
+    const root =
+      doc.querySelector("main") ||
+      doc.querySelector("article") ||
+      doc.querySelector("[role='main']") ||
+      doc.body
+
+    if (!root) return []
+
+    return Array.from(root.querySelectorAll("a[href]"))
       .filter(link => link.textContent?.trim())
       .map(link => ({
         href: (link as HTMLAnchorElement).href,

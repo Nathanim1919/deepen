@@ -553,14 +553,7 @@ function Popup() {
       </div>
 
       {/* ── Footer ── */}
-      <div className="plasmo-pb-4 plasmo-pt-0">
-        <div className="plasmo-flex plasmo-items-center plasmo-justify-center plasmo-gap-1.5 plasmo-text-[11px] plasmo-text-ink-faint/50">
-          <kbd className="plasmo-px-[6px] plasmo-py-[2px] plasmo-bg-white/[0.03] plasmo-rounded-[4px] plasmo-text-[10px] plasmo-font-medium plasmo-text-ink-faint plasmo-border plasmo-border-white/[0.05]">
-            {"\u2318"}S
-          </kbd>
-          <span>quick capture</span>
-        </div>
-      </div>
+      <div className="plasmo-pb-4 plasmo-pt-1" />
     </motion.div>
   )
 }

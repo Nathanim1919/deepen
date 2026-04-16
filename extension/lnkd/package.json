@@ -1,7 +1,7 @@
 {
   "name": "lnkd",
   "displayName": "Deepen",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Capture and save web content as structured Markdown to your Deepen knowledge library.",
   "author": "Nathanim tadele",
   "scripts": {
