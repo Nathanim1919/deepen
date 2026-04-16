@@ -9,6 +9,8 @@ import "./style.css"
 
 // ─── Types ───────────────────────────────────────────────────
 
+type Theme = "light" | "dark"
+
 type CaptureState =
   | { status: "idle" }
   | { status: "waiting" }
@@ -69,7 +71,7 @@ function LogoMark() {
   return (
     <div className="plasmo-relative plasmo-w-[30px] plasmo-h-[30px] plasmo-flex plasmo-items-center plasmo-justify-center">
       {/* Glow behind logo */}
-      <div className="plasmo-absolute plasmo-inset-0 plasmo-rounded-[8px] plasmo-bg-accent-primary/20 plasmo-blur-[6px]" />
+      <div className="plasmo-absolute plasmo-inset-0 plasmo-rounded-[8px] plasmo-bg-accent-glow plasmo-blur-[6px]" />
       <div className="plasmo-relative plasmo-w-full plasmo-h-full plasmo-rounded-[8px] plasmo-bg-gradient-to-br plasmo-from-accent-primary plasmo-to-accent-secondary plasmo-flex plasmo-items-center plasmo-justify-center">
         <svg
           width="14"
@@ -109,7 +111,7 @@ function PageCard({ tab }: { tab: TabInfo | null }) {
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-      className="plasmo-rounded-card plasmo-bg-surface-raised plasmo-p-4 plasmo-border plasmo-border-white/[0.04]">
+      className="plasmo-rounded-card plasmo-bg-surface-raised plasmo-p-4 plasmo-border plasmo-border-line">
       <div className="plasmo-flex plasmo-items-center plasmo-gap-3">
         {tab.favIconUrl ? (
           <img
@@ -162,7 +164,7 @@ function StatusPill({ state }: { state: CaptureState }) {
   return (
     <motion.div {...fade} className="plasmo-flex plasmo-justify-center">
       <div
-        className={`plasmo-inline-flex plasmo-items-center plasmo-gap-2 plasmo-px-3.5 plasmo-py-[7px] plasmo-rounded-pill plasmo-bg-surface-raised plasmo-border plasmo-border-white/[0.04] ${color}`}>
+        className={`plasmo-inline-flex plasmo-items-center plasmo-gap-2 plasmo-px-3.5 plasmo-py-[7px] plasmo-rounded-pill plasmo-bg-surface-raised plasmo-border plasmo-border-line ${color}`}>
         {isProcessing && (
           <div className="plasmo-w-3 plasmo-h-3 plasmo-border-[1.5px] plasmo-border-current plasmo-border-t-transparent plasmo-rounded-full spin-smooth" />
         )}
@@ -204,7 +206,7 @@ function CaptureButton({
     <div className="plasmo-relative">
       {/* Glow effect under button */}
       {!isActive && !isDone && (
-        <div className="plasmo-absolute plasmo-inset-x-4 plasmo-bottom-0 plasmo-h-8 plasmo-bg-accent-primary/20 plasmo-blur-xl plasmo-rounded-full" />
+        <div className="plasmo-absolute plasmo-inset-x-4 plasmo-bottom-0 plasmo-h-8 plasmo-bg-accent-glow plasmo-blur-xl plasmo-rounded-full" />
       )}
       <motion.button
         onClick={onClick}
@@ -233,7 +235,7 @@ function SignInButton() {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-      className="plasmo-rounded-card plasmo-bg-surface-raised plasmo-border plasmo-border-white/[0.04] plasmo-p-4 plasmo-text-center">
+      className="plasmo-rounded-card plasmo-bg-surface-raised plasmo-border plasmo-border-line plasmo-p-4 plasmo-text-center">
       <p className="plasmo-text-[12px] plasmo-text-ink-muted plasmo-mb-3">
         Sign in to start capturing
       </p>
@@ -260,7 +262,7 @@ function RecentCaptures({
 }) {
   if (loading) {
     return (
-      <div className="plasmo-rounded-card plasmo-bg-surface-raised plasmo-border plasmo-border-white/[0.04] plasmo-p-3 plasmo-space-y-2">
+      <div className="plasmo-rounded-card plasmo-bg-surface-raised plasmo-border plasmo-border-line plasmo-p-3 plasmo-space-y-2">
         {[0, 1, 2].map((i) => (
           <div key={i} className="plasmo-flex plasmo-items-center plasmo-gap-2.5 plasmo-py-1">
             <div className="plasmo-w-5 plasmo-h-5 plasmo-rounded-[5px] plasmo-bg-surface-subtle plasmo-animate-pulse plasmo-flex-shrink-0" />
@@ -279,7 +281,7 @@ function RecentCaptures({
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="plasmo-rounded-card plasmo-bg-surface-raised plasmo-border plasmo-border-white/[0.04] plasmo-p-4 plasmo-text-center">
+        className="plasmo-rounded-card plasmo-bg-surface-raised plasmo-border plasmo-border-line plasmo-p-4 plasmo-text-center">
         <div className="plasmo-text-[20px] plasmo-mb-1.5">&#10024;</div>
         <p className="plasmo-text-[12px] plasmo-text-ink-muted plasmo-leading-[1.5]">
           Capture your very first content<br />and see the magic
@@ -293,7 +295,7 @@ function RecentCaptures({
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-      className="plasmo-rounded-card plasmo-bg-surface-raised plasmo-border plasmo-border-white/[0.04] plasmo-p-1.5">
+      className="plasmo-rounded-card plasmo-bg-surface-raised plasmo-border plasmo-border-line plasmo-p-1.5">
       <div className="plasmo-flex plasmo-items-center plasmo-justify-between plasmo-px-2.5 plasmo-pt-1.5 plasmo-pb-1">
         <span className="plasmo-text-[10px] plasmo-font-medium plasmo-uppercase plasmo-tracking-[0.05em] plasmo-text-ink-faint">
           Recent
@@ -308,7 +310,7 @@ function RecentCaptures({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: i * 0.05 }}
-          className="plasmo-w-full plasmo-flex plasmo-items-center plasmo-gap-2.5 plasmo-px-2.5 plasmo-py-[7px] plasmo-rounded-[8px] hover:plasmo-bg-white/[0.03] plasmo-transition-colors plasmo-duration-150 plasmo-text-left">
+          className="plasmo-w-full plasmo-flex plasmo-items-center plasmo-gap-2.5 plasmo-px-2.5 plasmo-py-[7px] plasmo-rounded-[8px] hover:plasmo-bg-hover plasmo-transition-colors plasmo-duration-150 plasmo-text-left">
           {capture.metadata?.favicon ? (
             <img
               src={capture.metadata.favicon}
@@ -332,12 +334,21 @@ function RecentCaptures({
 // ─── Main Popup ─────────────────────────────────────────────
 
 function Popup() {
+  const [theme, setTheme] = useState<Theme>(
+    () => (localStorage.getItem("deepen-theme") as Theme) || "dark"
+  )
   const [state, setState] = useState<CaptureState>({ status: "idle" })
   const [tab, setTab] = useState<TabInfo | null>(null)
   const [authState, setAuthState] = useState<AuthState>("loading")
   const [recentCaptures, setRecentCaptures] = useState<CaptureItem[]>([])
   const [capturesLoading, setCapturesLoading] = useState(true)
   const [hadNoCaptures, setHadNoCaptures] = useState(false)
+
+  const toggleTheme = () => {
+    const next: Theme = theme === "dark" ? "light" : "dark"
+    setTheme(next)
+    localStorage.setItem("deepen-theme", next)
+  }
 
   // Check auth and fetch recent captures
   useEffect(() => {
@@ -504,11 +515,8 @@ function Popup() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-      className="plasmo-w-[340px] plasmo-bg-surface-base plasmo-text-ink-base plasmo-overflow-hidden"
-      style={{
-        background:
-          "radial-gradient(ellipse 120% 80% at 50% 0%, #15141e 0%, #09090b 70%)",
-      }}>
+      className={`${theme === "dark" ? "dark" : ""} plasmo-w-[340px] plasmo-bg-surface-base plasmo-text-ink-base plasmo-overflow-hidden`}
+      style={{ background: "var(--bg-gradient)" }}>
 
       {/* ── Header ── */}
       <div className="plasmo-px-5 plasmo-pt-[18px] plasmo-pb-4 plasmo-flex plasmo-items-center plasmo-justify-between">
@@ -519,15 +527,43 @@ function Popup() {
           </span>
         </div>
 
-        <motion.button
-          onClick={() => window.open(`${APP_URL}/in`, "_blank")}
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.96 }}
-          transition={spring}
-          className="plasmo-px-3 plasmo-py-[5px] plasmo-rounded-pill plasmo-text-[11px] plasmo-font-medium plasmo-tracking-[0.02em] plasmo-uppercase plasmo-text-ink-faint hover:plasmo-text-ink-muted plasmo-bg-white/[0.03] hover:plasmo-bg-white/[0.06] plasmo-border plasmo-border-white/[0.05] plasmo-transition-all plasmo-duration-200"
-          title="Open your library">
-          Library
-        </motion.button>
+        <div className="plasmo-flex plasmo-items-center plasmo-gap-1.5">
+          <motion.button
+            onClick={toggleTheme}
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.92 }}
+            transition={spring}
+            className="plasmo-w-[30px] plasmo-h-[30px] plasmo-flex plasmo-items-center plasmo-justify-center plasmo-rounded-full plasmo-text-ink-faint hover:plasmo-text-ink-muted hover:plasmo-bg-hover-strong plasmo-transition-colors plasmo-duration-200"
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
+            {theme === "dark" ? (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="5" />
+                <line x1="12" y1="1" x2="12" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="23" />
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                <line x1="1" y1="12" x2="3" y2="12" />
+                <line x1="21" y1="12" x2="23" y2="12" />
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+              </svg>
+            ) : (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+            )}
+          </motion.button>
+
+          <motion.button
+            onClick={() => window.open(`${APP_URL}/in`, "_blank")}
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+            transition={spring}
+            className="plasmo-px-3 plasmo-py-[5px] plasmo-rounded-pill plasmo-text-[11px] plasmo-font-medium plasmo-tracking-[0.02em] plasmo-uppercase plasmo-text-ink-faint hover:plasmo-text-ink-muted plasmo-bg-hover hover:plasmo-bg-hover-strong plasmo-border plasmo-border-line plasmo-transition-all plasmo-duration-200"
+            title="Open your library">
+            Library
+          </motion.button>
+        </div>
       </div>
 
       {/* ── Content ── */}

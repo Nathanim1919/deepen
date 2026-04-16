@@ -1,31 +1,34 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ["./src/**/*.{tsx,html}"],
-  darkMode: "media",
+  darkMode: "class",
   prefix: "plasmo-",
   theme: {
     extend: {
       colors: {
         surface: {
-          base: "#09090b",
-          raised: "#111113",
-          overlay: "#18181b",
-          subtle: "#1f1f23",
+          base: "var(--surface-base)",
+          raised: "var(--surface-raised)",
+          overlay: "var(--surface-overlay)",
+          subtle: "var(--surface-subtle)",
         },
         accent: {
-          primary: "#a78bfa",
-          secondary: "#818cf8",
-          glow: "rgba(167, 139, 250, 0.15)",
+          primary: "var(--accent-primary)",
+          secondary: "var(--accent-secondary)",
+          glow: "var(--accent-glow-bg)",
         },
         ink: {
-          strong: "#fafafa",
-          base: "#e4e4e7",
-          muted: "#a1a1aa",
-          faint: "#52525b",
+          strong: "var(--ink-strong)",
+          base: "var(--ink-base)",
+          muted: "var(--ink-muted)",
+          faint: "var(--ink-faint)",
         },
-        success: "#34d399",
-        warning: "#fbbf24",
-        error: "#fb7185",
+        success: "var(--success)",
+        warning: "var(--warning)",
+        error: "var(--error)",
+        line: "var(--border-soft)",
+        hover: "var(--hover-overlay)",
+        "hover-strong": "var(--hover-overlay-strong)",
       },
       fontFamily: {
         sans: [
@@ -44,9 +47,9 @@ module.exports = {
         pill: "100px",
       },
       boxShadow: {
-        glow: "0 0 20px -4px rgba(167, 139, 250, 0.3)",
-        "glow-lg": "0 0 32px -4px rgba(167, 139, 250, 0.4)",
-        lift: "0 1px 3px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.3)",
+        glow: "var(--glow-shadow)",
+        "glow-lg": "var(--glow-shadow-lg)",
+        lift: "0 1px 3px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.05)",
       },
     },
   },
