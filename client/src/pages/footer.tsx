@@ -94,7 +94,7 @@ export const Footer = () => {
                 </ul>
                 <ul className="space-y-4">
                     <li className="font-semibold text-gray-900 dark:text-white tracking-wider uppercase text-xs">Legal</li>
-                    <li><a href="#" className="hover:text-blue-500 transition-colors">Privacy</a></li>
+                    <li><a href="/privacy" className="hover:text-blue-500 transition-colors">Privacy</a></li>
                     <li><a href="#" className="hover:text-blue-500 transition-colors">Terms</a></li>
                 </ul>
             </div>

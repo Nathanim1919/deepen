@@ -31,6 +31,7 @@ import ConversationList from "./components/panels/conversationList";
 import { BrainChatContainer } from "./components/brainChat/BrainChatContainer";
 import { EmptyChatView } from "./components/brainChat/EmptyChatView";
 import { PricingPage } from "./pages/PricingPage";
+import { PrivacyPolicy } from "./pages/PrivacyPolicy";
 
 const FolderPanel = () => <FoldersPanel />;
 
@@ -110,6 +111,12 @@ const FeedbackRoute = createRoute({
   getParentRoute: () => publicRoute,
   path: "feedback",
   component: FeedbackHub,
+});
+
+const PrivacyPolicyRoute = createRoute({
+  getParentRoute: () => publicRoute,
+  path: "privacy",
+  component: PrivacyPolicy,
 });
 
 
@@ -262,6 +269,7 @@ export const routeTree = rootRoute.addChildren([
     // FeaturesRoute,
     FAQRoute,
     FeedbackRoute,
+    PrivacyPolicyRoute,
   ]), // Correctly nest children of PublicLayout
   RegisterRoute,
   LoginRoute,
