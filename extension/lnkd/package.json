@@ -1,8 +1,8 @@
 {
   "name": "lnkd",
-  "displayName": "Lnkd",
+  "displayName": "Deepen",
   "version": "0.0.1",
-  "description": "capture everthing in the web",
+  "description": "Capture and save web content as structured Markdown to your Deepen knowledge library.",
   "author": "Nathanim tadele",
   "scripts": {
     "dev": "plasmo dev",
@@ -35,10 +35,12 @@
     "typescript": "5.3.3"
   },
   "manifest": {
+    "permissions": [
+      "activeTab",
+      "scripting"
+    ],
     "host_permissions": [
-      "http://localhost:3000/*",
-      "https://api.linkmeld.com/*",
-      "https://linkmeld.com/*"
+      "https://deepen-backend2.onrender.com/*"
     ]
   }
 }

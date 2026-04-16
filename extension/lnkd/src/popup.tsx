@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import { useCallback, useEffect, useState } from "react"
 
 import { authClient } from "./auth/auth-client"
+import { capturePageData } from "./lib/capturePageData"
 
 import "tailwindcss/tailwind.css"
 import "./style.css"
@@ -452,34 +453,9 @@ function Popup() {
 
       setState({ status: "waiting" })
 
-      const response: any = await new Promise((resolve, reject) => {
-        const timeout = setTimeout(
-          () => reject(new Error("Page didn\u2019t respond. Try refreshing.")),
-          15000
-        )
-        chrome.tabs.sendMessage(
-          activeTab.id!,
-          { action: "extractPageData" },
-          (res) => {
-            clearTimeout(timeout)
-            if (chrome.runtime.lastError) {
-              reject(new Error("Can\u2019t access this page"))
-              return
-            }
-            resolve(res)
-          }
-        )
-      })
+      const response = await capturePageData(activeTab.id!)
 
       setState({ status: "extracting" })
-
-      if (!response?.success) {
-        setState({
-          status: "error",
-          message: response?.error || "Extraction failed",
-        })
-        return
-      }
 
       setState({ status: "saving" })
 

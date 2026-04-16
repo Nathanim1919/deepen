@@ -1,10 +1,9 @@
-import { getCleanMainContentRoot } from "./cleanDocument"
 import { cleanText } from "./utils"
 
 export function extractMetadata() {
     const meta = (name: string) =>
       (document.querySelector(`meta[name='${name}'], meta[property='${name}']`) as HTMLMetaElement)?.content || ""
-  
+
     return {
       title: document.title || "Untitled",
       description: meta("description") || meta("og:description") || "",
@@ -15,10 +14,10 @@ export function extractMetadata() {
       publishedTime: meta("article:published_time"),
     }
   }
-  
 
-  export function extractLinks() {
-    return Array.from(document.querySelectorAll("a[href]"))
+
+  export function extractLinks(doc: Document) {
+    return Array.from(doc.querySelectorAll("a[href]"))
       .filter(link => link.textContent?.trim())
       .map(link => ({
         href: (link as HTMLAnchorElement).href,
@@ -26,7 +25,7 @@ export function extractMetadata() {
         title: link.getAttribute("title") || link.getAttribute("aria-label") || ""
       }))
   }
-  
+
   export function extractImages() {
     return Array.from(document.querySelectorAll("img[src]") as NodeListOf<HTMLImageElement>)
       .filter(img => img.src && !img.src.startsWith("data:"))
@@ -38,12 +37,17 @@ export function extractMetadata() {
         height: img.height || 0
       }))
   }
-  
-  export function extractHeadings(): { level: number; text: string }[] {
-    const cleanRoot = getCleanMainContentRoot()
-    if (!cleanRoot) return []
-  
-    return Array.from(cleanRoot.querySelectorAll("h1,h2,h3,h4,h5,h6"))
+
+  export function extractHeadings(doc: Document): { level: number; text: string }[] {
+    const root =
+      doc.querySelector("main") ||
+      doc.querySelector("article") ||
+      doc.querySelector("[role='main']") ||
+      doc.body
+
+    if (!root) return []
+
+    return Array.from(root.querySelectorAll("h1,h2,h3,h4,h5,h6"))
       .map(h => ({
         level: Math.min(Math.max(Number(h.tagName[1]), 1), 6),
         text: cleanText(h.textContent || "")
