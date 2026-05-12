@@ -13,6 +13,7 @@ export const BrainChatContainer = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { conversationId } = useParams({ strict: false });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -64,8 +65,8 @@ export const BrainChatContainer = () => {
 
   const handleDelete = async () => {
     if (!conversationId || conversationId.startsWith("temp-")) return;
-    if (!window.confirm("Delete this conversation? This cannot be undone.")) return;
 
+    setIsDeleting(true);
     try {
       await deleteConversation(conversationId);
       toast.success("Conversation deleted");
@@ -112,6 +113,7 @@ export const BrainChatContainer = () => {
       conversationId &&
       !conversation &&
       !isLoading &&
+      !isDeleting &&
       !conversationId.startsWith("temp-")
     ) {
       setIsLoading(true);

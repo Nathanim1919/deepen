@@ -3,6 +3,8 @@
 Planned features for Deepen, tracked here so we can tackle them one by one.
 
 ## Content Capture & Organization
+- [ ] In-app capture: paste text or write notes directly (no extension needed)
+- [ ] File upload: drag-and-drop PDFs and text files as captures (uses existing R2 storage + Trigger.dev PDF processing)
 - [ ] Tags/labels system for captures (beyond just folders and bookmarks)
 - [ ] Bulk operations (multi-select, batch move/delete/tag)
 - [ ] Import/export (Notion, Pocket, Instapaper, browser bookmarks)

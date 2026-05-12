@@ -161,11 +161,13 @@ const NoteView: React.FC<NoteViewProps> = ({ capture }) => {
               {loading ? "Reprocessing..." : "Reprocess"}
             </button>
           </div>
-        ) : capture.processingStatus === PROCESSING_STATUS.PROCESSING ? (
+        ) : capture.processingStatus === PROCESSING_STATUS.PENDING || capture.processingStatus === PROCESSING_STATUS.PROCESSING ? (
           <div className="flex flex-col items-center justify-center h-full space-y-4 text-center">
             <p>
               <span className="animate-pulse text-gray-500 dark:text-gray-400">
-                Processing capture... <br />
+                {capture.processingStatus === PROCESSING_STATUS.PENDING
+                  ? "Preparing your capture..."
+                  : "Processing capture..."} <br />
               </span>
               <span className="text-sm text-gray-500 dark:text-gray-400">
                 Please wait, this may take a moment.

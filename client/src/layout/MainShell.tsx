@@ -11,6 +11,8 @@ import { ChevronsLeft, ChevronsRight } from "lucide-react";
 import { ContextSelectorOverlay } from "../components/brainChat/context-selector/ContextSelectorOverlay";
 import { HoverCoach } from "../components/hover-coach/HoverCoach";
 import { TemporaryAccessGuard } from "../components/TemporaryAccessGuard";
+import { AddCaptureModal } from "../components/modals/AddCaptureModal";
+import { useUIStore } from "../stores/ui-store";
 
 export const MainShell = () => {
   const [session, setSession] = useState<{
@@ -26,6 +28,7 @@ export const MainShell = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [hideSidebar, setHideSidebar] = useState(true);
   const navigate = useNavigate();
+  const { openAddCaptureModal, setOpenAddCaptureModal } = useUIStore();
 
   useEffect(() => {
     const loadSession = async () => {
@@ -78,6 +81,9 @@ export const MainShell = () => {
     <div className="h-screen w-screen overflow-hidden">
       <TemporaryAccessGuard />
       <ContextSelectorOverlay />
+      {openAddCaptureModal && (
+        <AddCaptureModal closeModal={() => setOpenAddCaptureModal(false)} />
+      )}
       <HoverCoach />
       <div className="w-8 h-8 m-1 rounded-full grid md:hidden place-items-center fixed z-1000 bottom-0 bg-[#000000]">
         {hideSidebar ? (

@@ -241,6 +241,24 @@ export const CaptureService = {
     ).then(response => response.data);
   },
 
+  /**
+   * Upload a file or paste text as a new capture
+   */
+  async uploadCapture(data: { file?: File; pastedText?: string }): Promise<{ captureId: string }> {
+    const formData = new FormData();
+    if (data.file) formData.append("file", data.file);
+    if (data.pastedText) formData.append("pastedText", data.pastedText);
+
+    return apiCall(
+      () =>
+        api.post<ApiResponse<{ captureId: string }>>("/captures/upload", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+          timeout: 60000,
+        }),
+      "Failed to upload capture"
+    ).then((response) => response.data);
+  },
+
   // Private helper methods
   buildFilterEndpoint(filter: CaptureFilter, id?: string): string {
     switch (filter) {

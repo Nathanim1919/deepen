@@ -45,6 +45,7 @@ export interface UIState {
   openActionBar: boolean;
   openAiChat: boolean;
   expandAiChat: boolean;
+  openAddCaptureModal: boolean;
 
 
   // Theme
@@ -68,6 +69,7 @@ export interface UIActions {
   setOpenActionBar: (open: boolean) => void;
   setOpenAiChat: (open: boolean) => void;
   setExpandAiChat: (open: boolean) => void;
+  setOpenAddCaptureModal: (open: boolean) => void;
 
   // Theme actions
   setTheme: (theme: "light" | "dark" | "system") => void;

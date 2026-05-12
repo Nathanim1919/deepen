@@ -26,6 +26,7 @@ export const useUIStore = create<UIStore>()(
       openActionBar: false,
       openAiChat: false,
       expandAiChat: false,
+      openAddCaptureModal: false,
       theme: "dark",
 
       // UI Actions
@@ -51,6 +52,7 @@ export const useUIStore = create<UIStore>()(
       setOpenActionBar: (openActionBar) => set({ openActionBar }),
       setOpenAiChat: (openAiChat) => set({ openAiChat }),
       setExpandAiChat: (expandAiChat) => set({ expandAiChat }),
+      setOpenAddCaptureModal: (openAddCaptureModal) => set({ openAddCaptureModal }),
       setTheme: (theme) => {
         set({ theme });
         // Apply theme to DOM
@@ -95,6 +97,7 @@ export const useUIStore = create<UIStore>()(
           openActionBar: false,
           openAiChat: false,
           expandAiChat: false,
+          openAddCaptureModal: false,
         }),
     }),
     {

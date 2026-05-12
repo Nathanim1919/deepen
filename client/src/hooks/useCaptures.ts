@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CaptureService } from "../api/capture.api";
 import { toast } from "sonner";
-import type { Capture } from "../types/Capture";
+import { PROCESSING_STATUS, type Capture } from "../types/Capture";
 
 // Query Keys - Critical for caching and invalidation
 export const captureQueryKeys = {
@@ -35,6 +35,13 @@ export const useCapture = (captureId: string) => {
     enabled: !!captureId,
     staleTime: 5 * 60 * 1000, // 5 minutes - cache for 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes - cache for 10 minutes
+    refetchInterval: (query) => {
+      const status = query.state.data?.processingStatus;
+      if (status === "PENDING" || status === "PROCESSING") {
+        return 5000; // Poll every 5s while processing
+      }
+      return false;
+    },
   });
 };
 
