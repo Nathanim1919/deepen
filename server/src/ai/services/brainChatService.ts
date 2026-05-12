@@ -25,6 +25,20 @@ export { BrainChatContext, BrainChatMessage, MessageSource };
 const MAX_CONVERSATION_HISTORY = 10;
 
 /**
+ * Deepen's core personality — used as the base system prompt for all brain chat conversations.
+ */
+const DEEPEN_PERSONALITY = `You are **Deepen** — a smart, friendly AI knowledge assistant that helps users explore, understand, and reason about their saved content. You are part of a "second brain" platform where users capture web pages, articles, PDFs, and other content.
+
+Your personality:
+- Friendly, curious, and conversational — like a knowledgeable peer, never robotic
+- You reason carefully using the user's saved content as your primary source
+- You're honest when you don't know something or can't find it in the user's knowledge base
+- You give concise, well-structured answers using markdown formatting
+- You proactively suggest follow-up questions or related topics the user might explore
+
+You have access to the user's captured knowledge through semantic search. When context is provided, prioritize it. When no relevant context is found, be transparent about it but still try to be helpful.`;
+
+/**
  * Result from building conversation context - includes both prompt and sources
  */
 export interface ContextBuildResult {
@@ -195,10 +209,9 @@ export class BrainChatService {
 
     const allContext = contextParts.join("\n\n");
 
-    // Build the full system message with context
-    return `You are a helpful assistant. The user is asking questions about ${description}.
+    return `${DEEPEN_PERSONALITY}
 
-Below is relevant content from their saved documents. Use this information to answer their questions accurately. If the answer isn't in the provided context, say so honestly.
+The user is asking questions about ${description}. Below is relevant content retrieved from their saved documents. Use this information to answer their questions accurately. If the answer isn't in the provided context, say so honestly — but you can still reason and offer helpful related insights.
 
 === RELEVANT CONTEXT ===
 
@@ -206,7 +219,7 @@ ${allContext}
 
 === END OF CONTEXT ===
 
-Now answer the user's question based on the context above.`;
+Answer the user's question based on the context above.`;
   }
 
   /**
@@ -234,7 +247,7 @@ Now answer the user's question based on the context above.`;
       const userApiKey = await UserService.getGeminiApiKey(userId);
 
       // Build the context using RAG search (if API key available and context selected)
-      let systemPrompt = "You are a helpful assistant.";
+      let systemPrompt = DEEPEN_PERSONALITY;
       let sources: MessageSource[] = [];  // Track sources for this response
       
       if (userApiKey && request.context) {
@@ -316,7 +329,7 @@ Now answer the user's question based on the context above.`;
       const userApiKey = await UserService.getGeminiApiKey(userId);
 
       // Build the context using RAG search
-      let systemPrompt = "You are a helpful assistant.";
+      let systemPrompt = DEEPEN_PERSONALITY;
       let sources: MessageSource[] = [];
       
       if (userApiKey && request.context) {
@@ -420,7 +433,7 @@ Now answer the user's question based on the context above.`;
 
     // Build fresh RAG context for THIS message
     // This is important - each question might need different relevant chunks!
-    let systemPrompt = "You are a helpful assistant.";
+    let systemPrompt = DEEPEN_PERSONALITY;
     let sources: MessageSource[] = [];  // Track sources for this response
     
     const userApiKey = await UserService.getGeminiApiKey(userId);

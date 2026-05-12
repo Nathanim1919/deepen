@@ -1,10 +1,11 @@
-import { Ellipsis, Send, Share, Trash } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { Ellipsis, Send, Share, Trash, Square } from "lucide-react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useBrainStore } from "../../stores/brain-store";
 import { ChatSkeleton } from "../skeleton/ChatSkeleton";
 import { MessageBubble } from "../Chat/MessageBubble";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 export const BrainChatContainer = () => {
   const [showOptions, setShowOptions] = useState(false);
@@ -17,6 +18,13 @@ export const BrainChatContainer = () => {
     useBrainStore();
   const [message, setMessage] = useState("");
   const conversation = conversations[conversationId || ""];
+
+  // Detect if assistant is currently streaming a response
+  const isStreaming = useMemo(() => {
+    return conversation?.messages.some(
+      (m) => m.role === "assistant" && m.status === "sending"
+    ) ?? false;
+  }, [conversation?.messages]);
 
   const navigate = useNavigate();
 
@@ -32,19 +40,11 @@ export const BrainChatContainer = () => {
   const handleSendMessage = async () => {
     if (!message.trim() || isSending) return;
 
+    const currentMessage = message.trim();
+    setMessage(""); // Clear input immediately
     setIsSending(true);
-    console.log(
-      "BrainChatContainer: handleSendMessage called with:",
-      message.trim(),
-    );
-    console.log(
-      "BrainChatContainer: active conversation ID:",
-      useBrainStore.getState().activeConversationId,
-    );
     try {
-      await sendMessage(message.trim());
-      console.log("BrainChatContainer: sendMessage completed");
-      setMessage(""); // Clear input after sending
+      await sendMessage(currentMessage);
     } catch (error) {
       console.error("BrainChatContainer: sendMessage failed:", error);
     } finally {
@@ -142,6 +142,35 @@ export const BrainChatContainer = () => {
                 />
               </div>
             ))}
+            {/* Thinking indicator while waiting for first streaming token */}
+            {isSending && !isStreaming && (
+              <motion.div
+                className="flex items-center gap-3 py-4 pl-12"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                <div className="flex items-center gap-1">
+                  {[0, 1, 2].map((i) => (
+                    <motion.div
+                      key={i}
+                      className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-500"
+                      animate={{
+                        y: [0, -5, 0],
+                        opacity: [0.4, 1, 0.4],
+                      }}
+                      transition={{
+                        duration: 0.8,
+                        repeat: Infinity,
+                        delay: i * 0.15,
+                      }}
+                    />
+                  ))}
+                </div>
+                <span className="text-sm text-gray-400 dark:text-gray-500">
+                  Thinking...
+                </span>
+              </motion.div>
+            )}
             {/* Scroll anchor */}
             <div ref={messagesEndRef} />
           </>
@@ -157,16 +186,20 @@ export const BrainChatContainer = () => {
               handleSendMessage();
             }
           }}
-          className="w-full h-full resize-none focus:outline-none text-black dark:text-white"
+          className="w-full h-full resize-none focus:outline-none bg-transparent text-black dark:text-white"
           placeholder="Ask anything..."
           rows={1}
         />
         <button
           onClick={handleSendMessage}
-          disabled={!message.trim() || isSending}
+          disabled={!message.trim() || isSending || isStreaming}
           className=" w-8 h-8 grid place-items-center text-black dark:text-white rounded-full cursor-pointer hover:opacity-50 disabled:opacity-30 disabled:cursor-not-allowed"
         >
-          <Send size={22} />
+          {isSending || isStreaming ? (
+            <Square size={16} className="text-gray-400" />
+          ) : (
+            <Send size={22} />
+          )}
         </button>
       </div>
     </div>

@@ -34,7 +34,7 @@ export const MessageBubble = ({ role, content, sources }: MessageBubbleProps) =>
           >
             {!isUser && (
 
-              <Brain className="w-5 h-5 text-gray-600 dark:text-gray-400 animate-pulse-slow" />
+              <Brain className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             )}
           </div>}
         </div>

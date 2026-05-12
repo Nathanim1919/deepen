@@ -9,7 +9,7 @@ Planned features for Deepen, tracked here so we can tackle them one by one.
 - [ ] Nested collections (sub-folders — model already has `parentCollection`)
 
 ## AI & Brain Chat
-- [ ] Auto-categorization of new captures using AI *(up next)*
+- [x] Auto-categorization of new captures using AI
 - [ ] Conversation sharing/export
 - [ ] Follow-up suggestions after AI responses
 - [ ] Citation linking (click source reference → jump to original capture)
