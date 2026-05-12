@@ -10,7 +10,9 @@ import {
   toggleBookmark,
   reProcessCapture,
   deleteCapture,
+  uploadCapture,
 } from "../controllers/captureController";
+import { upload } from "../middleware/upload";
 
 const router = express.Router();
 
@@ -31,6 +33,13 @@ router.get("/", getCaptures);
  * @rate    Limited (15 requests/minute)
  */
 router.post("/save", rateLimiter("strict"), saveCapture);
+
+/**
+ * @route   POST /api/captures/upload
+ * @desc    Upload a file (PDF/TXT) or paste text as a new capture
+ * @access  Private
+ */
+router.post("/upload", rateLimiter("strict"), upload.single("file"), uploadCapture);
 
 /**
  * @route   GET /api/captures/search

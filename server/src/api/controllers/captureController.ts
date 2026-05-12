@@ -14,6 +14,8 @@ import { aiProcessing } from "../../trigger/aiProcessing";
 import { embeddingProcessing, EmbeddingTaskType } from "../../trigger/embeddingProcessing";
 import { pdfProcessing } from "../../trigger/pdfProcessing";
 import { checkRemotePdfSize } from "../../common/utils/checkRemotePdfSize";
+import { uploadToR2 } from "../../common/utils/r2Upload";
+import { extractTextFromPdf } from "../../common/utils/extractTextFromPdf";
 
 // Constants
 const MIN_CONTENT_LENGTH = 50;
@@ -500,6 +502,168 @@ const prepareLinks = (
       url: sanitizeHtml(link.href, { allowedTags: [] }),
       title: sanitizeHtml(link.text || "No title", { allowedTags: [] }),
     }));
+};
+
+/**
+ * Handles in-app capture: file upload (PDF/TXT) or pasted text.
+ * Creates a Capture, triggers AI + embedding jobs, returns captureId.
+ */
+export const uploadCapture = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const file = (req as any).file as { originalname: string; buffer: Buffer; mimetype: string; size: number } | undefined;
+    const pastedText = req.body.pastedText?.trim() as string | undefined;
+
+    if (!file && !pastedText) {
+      return ErrorResponse({
+        res,
+        statusCode: 400,
+        message: "Provide either a file or pasted text",
+      });
+    }
+
+    const userId = req.user.id;
+    const isPdf = file?.mimetype === "application/pdf";
+    const isTxt = file?.mimetype === "text/plain";
+
+    let cleanContent = "";
+    let title = "";
+    let syntheticUrl = "";
+    let blobUrl: string | undefined;
+    let format: ICapture["format"] = "document";
+
+    if (file && isPdf) {
+      // --- PDF upload ---
+      format = "pdf";
+
+      // Upload to R2
+      const r2Result = await uploadToR2({
+        originalname: file.originalname,
+        buffer: file.buffer,
+        mimetype: file.mimetype,
+      });
+      blobUrl = r2Result.url;
+
+      // Extract text
+      cleanContent = await extractTextFromPdf(file.buffer);
+      if (!cleanContent || cleanContent.length < MIN_CONTENT_LENGTH) {
+        return ErrorResponse({
+          res,
+          statusCode: 400,
+          message: "Could not extract enough text from this PDF",
+        });
+      }
+
+      title = file.originalname.replace(/\.pdf$/i, "");
+      syntheticUrl = `app://upload/${encodeURIComponent(file.originalname)}`;
+
+    } else if (file && isTxt) {
+      // --- TXT upload ---
+      cleanContent = file.buffer.toString("utf-8").trim();
+      if (cleanContent.length < MIN_CONTENT_LENGTH) {
+        return ErrorResponse({
+          res,
+          statusCode: 400,
+          message: "File content is too short to save",
+        });
+      }
+
+      title = file.originalname.replace(/\.txt$/i, "");
+      syntheticUrl = `app://upload/${encodeURIComponent(file.originalname)}`;
+
+    } else if (pastedText) {
+      // --- Pasted text ---
+      if (pastedText.length < MIN_CONTENT_LENGTH) {
+        return ErrorResponse({
+          res,
+          statusCode: 400,
+          message: "Text is too short to save (minimum 50 characters)",
+        });
+      }
+
+      cleanContent = pastedText;
+      // Title from first sentence or first 60 chars
+      const firstLine = pastedText.split(/[.\n]/)[0]?.trim() || "";
+      title = firstLine.length > 60
+        ? firstLine.slice(0, 57) + "..."
+        : firstLine || "Pasted Note";
+      syntheticUrl = `app://paste/${Date.now()}`;
+    }
+
+    const wordCount = countWords(cleanContent);
+
+    const capture = await new Capture({
+      owner: userId,
+      url: syntheticUrl,
+      blobUrl,
+      title: sanitizeHtml(title, { allowedTags: [] }),
+      slug: generateSlug(title),
+      contentHash: hashContent(cleanContent),
+      format,
+      processingStatus: "pending",
+
+      content: {
+        clean: cleanContent,
+        highlights: [],
+        attachments: [],
+      },
+
+      metadata: {
+        description: "",
+        capturedAt: new Date(),
+        isPdf,
+        type: "document",
+        language: "english",
+        keywords: [],
+        wordCount,
+        readingTime: Math.ceil(wordCount / 200),
+      },
+
+      source: {
+        ip: req.ip,
+        userAgent: req.headers["user-agent"] || "",
+        extensionVersion: "web-app",
+        method: "upload",
+      },
+
+      status: "active",
+      version: 1,
+    }).save();
+
+    const captureId = capture._id?.toString() || "";
+
+    // Queue background processing
+    logger.info(`[Upload] Triggering AI + embedding for capture ${captureId}`);
+    await aiProcessing.trigger({ captureId, userId });
+    await embeddingProcessing.trigger({
+      captureId,
+      userId,
+      taskType: EmbeddingTaskType.INDEX,
+    });
+
+    // Create associated conversation
+    const conversation = await Conversation.create({ captureId: capture._id });
+    capture.conversation = new Types.ObjectId(conversation._id);
+    await capture.save();
+
+    return SuccessResponse({
+      res,
+      statusCode: 201,
+      message: "Capture uploaded successfully",
+      data: { captureId },
+    });
+
+  } catch (error) {
+    console.error("[Upload] Error:", error);
+    return ErrorResponse({
+      res,
+      statusCode: 500,
+      message: "Failed to upload capture",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
 };
 
 export const reProcessCapture = async (
