@@ -6,7 +6,7 @@ import { ChatSkeleton } from "../skeleton/ChatSkeleton";
 import { MessageBubble } from "../Chat/MessageBubble";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { shareConversation, unshareConversation } from "../../api/brain.api";
+import { shareConversation } from "../../api/brain.api";
 
 export const BrainChatContainer = () => {
   const [showOptions, setShowOptions] = useState(false);
@@ -95,17 +95,6 @@ export const BrainChatContainer = () => {
     }
   };
 
-  const handleUnshare = async () => {
-    if (!conversationId || conversationId.startsWith("temp-")) return;
-
-    try {
-      await unshareConversation(conversationId);
-      toast.success("Share link revoked");
-    } catch {
-      toast.error("Failed to revoke share link");
-    }
-    setShowOptions(false);
-  };
 
   // Handle direct URL navigation - fetch conversation if not in store
   useEffect(() => {

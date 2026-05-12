@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CaptureService } from "../api/capture.api";
 import { toast } from "sonner";
-import { PROCESSING_STATUS, type Capture } from "../types/Capture";
+import type { Capture } from "../types/Capture";
 
 // Query Keys - Critical for caching and invalidation
 export const captureQueryKeys = {
