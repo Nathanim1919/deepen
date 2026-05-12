@@ -18,6 +18,7 @@ export const NoteHeader: React.FC<NoteHeaderProps> = ({
   title,
   description = "",
   url = "",
+  tags = [],
 }) => {
   return (
     <motion.div
@@ -47,6 +48,18 @@ export const NoteHeader: React.FC<NoteHeaderProps> = ({
         <p className="text-gray-700 dark:text-gray-400 mt-1 text-sm">
           {description}
         </p>
+      )}
+      {tags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mt-1">
+          {tags.map((tag) => (
+            <span
+              key={tag}
+              className="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
       )}
     </motion.div>
   );

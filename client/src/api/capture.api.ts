@@ -167,18 +167,20 @@ export const CaptureService = {
   async generateSummary(captureId: string): Promise<{
     success: boolean;
     summary?: string;
+    tags?: string[];
     error?: ApiError;
   }> {
     try {
       const response = await api.post<{
         success: boolean;
         message: string;
-        data: { summary: string; captureId: string };
+        data: { summary: string; tags?: string[]; captureId: string };
       }>("/ai/summary", { captureId });
 
       return {
         success: true,
         summary: response.data.data.summary,
+        tags: response.data.data.tags,
       };
     } catch (error) {
       const apiError = handleApiError(error, "Summary generation failed");

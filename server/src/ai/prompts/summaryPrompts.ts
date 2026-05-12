@@ -57,6 +57,19 @@ export const Prompt = {
 
     ---
 
+    ### 🏷️ Auto-Tags
+
+    At the very end of your response, on a new line, output a JSON block with content tags:
+    \`\`\`json
+    {"tags": ["tag1", "tag2", "tag3"]}
+    \`\`\`
+    - Generate 3–7 short, lowercase, descriptive tags that categorize the content.
+    - Tags should be broad enough to group related content (e.g., "machine-learning", "web-development", "psychology", "finance") but specific enough to be useful.
+    - Do NOT repeat the document title as a tag.
+    - This JSON block MUST be the very last thing in your output.
+
+    ---
+
     ### 🔒 Strict Rules
 
     - Never hallucinate or fabricate facts.

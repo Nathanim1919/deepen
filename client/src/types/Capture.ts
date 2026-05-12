@@ -46,16 +46,7 @@ export interface Capture {
 
   ai: {
     summary: string;
-    // tags: string[];
-    // entities: {
-    //   type: string;
-    //   text: string;
-    //   position: number[];
-    // }[];
-    // sentiment: {
-    //   score: number;
-    //   label: 'positive' | 'neutral' | 'negative';
-    // };
+    tags?: string[];
   };
 
   // Metadata

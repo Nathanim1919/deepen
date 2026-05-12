@@ -67,6 +67,7 @@ export class AIController {
 
       if (result.success && result.data) {
         capture.ai.summary = result.data.summary || "";
+        capture.ai.tags = result.data.tags || [];
         await capture.save();
 
         logger.info(`${SERVICE_NAME}:generateSummary:success`, {
@@ -88,6 +89,7 @@ export class AIController {
         statusCode: 200,
         data: {
           summary: result?.data?.summary,
+          tags: result?.data?.tags,
           captureId,
         },
         message: "AI summary generated successfully",

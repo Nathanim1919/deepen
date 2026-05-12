@@ -183,6 +183,23 @@ const NotesList: React.FC<NotesListProps> = ({
                           ? note.ai.summary.slice(0, 100) + "..."
                           : "")}
                     </p>
+                    {note.ai?.tags && note.ai.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-1">
+                        {note.ai.tags.slice(0, 3).map((tag) => (
+                          <span
+                            key={tag}
+                            className="px-1.5 py-0.5 text-[10px] rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                        {note.ai.tags.length > 3 && (
+                          <span className="text-[10px] text-gray-400">
+                            +{note.ai.tags.length - 3}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <button

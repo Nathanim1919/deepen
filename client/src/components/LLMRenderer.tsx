@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import DOMPurify from 'dompurify';
 // import { ClipboardIcon, ChevronRightIcon, SparklesIcon } from '@heroicons/react/24/outline';
 
@@ -240,11 +241,12 @@ export const LLMRenderer: React.FC<LLMRendererProps> = ({
                 </div>
                 <SyntaxHighlighter
                   language={match[1]}
+                  style={oneDark}
                   PreTag="pre"
                   showLineNumbers
                   wrapLines
                   lineNumberStyle={{ color: '#6b7280', minWidth: '2.25em' }}
-                  className="!bg-gray-900 !m-0 text-sm"
+                  customStyle={{ margin: 0, borderRadius: 0, fontSize: '0.875rem' }}
                   // Do not spread {...rest} to avoid passing an incompatible ref
                 >
                   {String(children).replace(/\n$/, '')}

@@ -11,6 +11,7 @@ export interface AIResponse {
   success: boolean;
   data?: {
     summary: string;
+    tags: string[];
   };
   error?: string;
   retryAfter?: number;

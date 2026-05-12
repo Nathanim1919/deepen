@@ -107,6 +107,7 @@ const CaptureSchema = new Schema<ICapture>(
 
     ai: {
       summary: { type: String, default: "" },
+      tags: { type: [String], default: [] },
       embeddings: { type: [Number], default: [] },
     },
     blobUrl: { type: String },

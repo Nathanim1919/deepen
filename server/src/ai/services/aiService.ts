@@ -58,10 +58,36 @@ export const processContent = async (
       modelId,
     );
 
+    // Parse tags from the JSON block at the end of the summary
+    let tags: string[] = [];
+    let cleanSummary = summaryResult;
+
+    const jsonMatch = summaryResult.match(
+      /```json\s*\n?\s*(\{[\s\S]*?"tags"\s*:[\s\S]*?\})\s*\n?\s*```\s*$/
+    );
+    if (jsonMatch) {
+      try {
+        const parsed = JSON.parse(jsonMatch[1]);
+        if (Array.isArray(parsed.tags)) {
+          tags = parsed.tags
+            .filter((t: unknown) => typeof t === "string")
+            .map((t: string) => t.toLowerCase().trim())
+            .filter((t: string) => t.length > 0)
+            .slice(0, 10);
+        }
+      } catch {
+        logger.warn("Failed to parse tags from AI response");
+      }
+      cleanSummary = summaryResult
+        .replace(/```json\s*\n?\s*\{[\s\S]*?"tags"\s*:[\s\S]*?\}\s*\n?\s*```\s*$/, "")
+        .trim();
+    }
+
     return {
       success: true,
       data: {
-        summary: summaryResult,
+        summary: cleanSummary,
+        tags,
       },
     };
   } catch (error) {

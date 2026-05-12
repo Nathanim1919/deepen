@@ -85,6 +85,7 @@ export interface ICapture extends Omit<Document, "collection"> {
   // ---- AI/ML Features ----
   ai: {
     summary?: string;
+    tags?: string[];
     embeddings?: number[];
   };
 

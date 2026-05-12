@@ -194,9 +194,9 @@ const NoteView: React.FC<NoteViewProps> = ({ capture }) => {
                 ""
               }
               tags={
-                capture.metadata?.keywords
-                  ? capture.metadata.keywords.map((tag) => tag.trim())
-                  : []
+                capture.ai?.tags?.length
+                  ? capture.ai.tags
+                  : capture.metadata?.keywords?.map((tag) => tag.trim()) || []
               }
               capturedAt={capture.metadata?.capturedAt || capture.createdAt}
             />

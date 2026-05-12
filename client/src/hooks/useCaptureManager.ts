@@ -59,6 +59,7 @@ export const useCaptureManager = (filter: 'all' | 'bookmarks' | 'folder' | 'sour
                 ai: {
                     ...captureStore.selectedCapture.ai,
                     summary: result.summary,
+                    tags: result.tags || [],
                 },
             });
         }
@@ -139,6 +140,7 @@ export const useCaptureDetail = (captureId: string) => {
                 ai: {
                     ...captureStore.selectedCapture.ai,
                     summary: result.summary,
+                    tags: result.tags || [],
                 },
             });
         }
