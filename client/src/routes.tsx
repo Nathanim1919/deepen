@@ -32,6 +32,7 @@ import { BrainChatContainer } from "./components/brainChat/BrainChatContainer";
 import { EmptyChatView } from "./components/brainChat/EmptyChatView";
 import { PricingPage } from "./pages/PricingPage";
 import { PrivacyPolicy } from "./pages/PrivacyPolicy";
+import { SharedConversation } from "./pages/SharedConversation";
 
 const FolderPanel = () => <FoldersPanel />;
 
@@ -119,6 +120,12 @@ const PrivacyPolicyRoute = createRoute({
   component: PrivacyPolicy,
 });
 
+
+const sharedConversationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "share/$shareToken",
+  component: SharedConversation,
+});
 
 const RegisterRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -261,6 +268,7 @@ const profileRoute = createRoute({
 
 // --- Final Tree --- //
 export const routeTree = rootRoute.addChildren([
+  sharedConversationRoute,
   waitlistRoute,
   publicRoute.addChildren([
     heroRoute,

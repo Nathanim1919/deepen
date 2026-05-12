@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { nanoid } from 'nanoid';
 import { v4 as uuidv4 } from 'uuid';
 import { getAiModelList } from "../api/chat.api";
-import { getConversations, getConversation, startConversationStream, sendMessage as sendMessageApi } from "../api/brain.api";
+import { getConversations, getConversation, startConversationStream, sendMessage as sendMessageApi, deleteConversation as deleteConversationApi } from "../api/brain.api";
 import { useSettingsStore } from "./settings-store";
 
 
@@ -190,8 +190,9 @@ type BrainStore = {
 
   startConversation: (initialMessage: string, tempId?: string) => Promise<void>;
   fetchConversations: () => Promise<void>;
-  fetchConversation: (id: string) => Promise<Conversation | null>; // Fetch full conversation with messages
+  fetchConversation: (id: string) => Promise<Conversation | null>;
   sendMessage: (content: string) => Promise<void>;
+  deleteConversation: (id: string) => Promise<void>;
   selectConversation: (id: string) => void;
 
   // Derived selectors
@@ -691,6 +692,19 @@ export const useBrainStore = create<BrainStore>((set, get) => ({
       console.error('Failed to fetch conversation:', error);
       return null;
     }
+  },
+
+  deleteConversation: async (id: string): Promise<void> => {
+    await deleteConversationApi(id);
+    set((state) => {
+      const { [id]: _, ...remainingConversations } = state.conversations;
+      const { [id]: __, ...remainingList } = state.conversationList;
+      return {
+        conversations: remainingConversations,
+        conversationList: remainingList,
+        activeConversationId: state.activeConversationId === id ? null : state.activeConversationId,
+      };
+    });
   },
 
   selectConversation: (id: string) =>

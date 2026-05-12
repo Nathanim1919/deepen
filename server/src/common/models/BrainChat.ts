@@ -42,6 +42,9 @@ export interface IBrainChatConversation extends mongoose.Document {
   context: BrainChatContext;
   messages: BrainChatMessage[];
   isActive: boolean;
+  isPublic?: boolean;
+  shareToken?: string;
+  sharedAt?: Date;
   lastActivity: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -87,6 +90,9 @@ const BrainChatConversationSchema = new Schema<IBrainChatConversation>({
   },
   messages: [BrainChatMessageSchema],
   isActive: { type: Boolean, default: true },
+  isPublic: { type: Boolean, default: false },
+  shareToken: { type: String, unique: true, sparse: true },
+  sharedAt: { type: Date },
   lastActivity: { type: Date, default: Date.now },
 }, {
   timestamps: true

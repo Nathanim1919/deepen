@@ -110,6 +110,56 @@ export class BrainChatController {
   }
 
 
+  static async deleteConversation(req: Request, res: Response) {
+    try {
+      const { user } = req;
+      const { conversationId } = req.params;
+      await BrainChatService.deleteConversation(conversationId, user.id);
+      return SuccessResponse({ res, statusCode: 200, data: { deleted: true } });
+    } catch (error) {
+      logger.error('Failed to delete conversation', { error });
+      return ErrorResponse({ res, statusCode: 500, message: 'Failed to delete conversation' });
+    }
+  }
+
+  static async shareConversation(req: Request, res: Response) {
+    try {
+      const { user } = req;
+      const { conversationId } = req.params;
+      const shareToken = await BrainChatService.shareConversation(conversationId, user.id);
+      return SuccessResponse({ res, statusCode: 200, data: { shareToken } });
+    } catch (error) {
+      logger.error('Failed to share conversation', { error });
+      return ErrorResponse({ res, statusCode: 500, message: 'Failed to share conversation' });
+    }
+  }
+
+  static async unshareConversation(req: Request, res: Response) {
+    try {
+      const { user } = req;
+      const { conversationId } = req.params;
+      await BrainChatService.unshareConversation(conversationId, user.id);
+      return SuccessResponse({ res, statusCode: 200, data: { unshared: true } });
+    } catch (error) {
+      logger.error('Failed to unshare conversation', { error });
+      return ErrorResponse({ res, statusCode: 500, message: 'Failed to unshare conversation' });
+    }
+  }
+
+  static async getSharedConversation(req: Request, res: Response) {
+    try {
+      const { shareToken } = req.params;
+      const conversation = await BrainChatService.getSharedConversation(shareToken);
+      if (!conversation) {
+        return ErrorResponse({ res, statusCode: 404, message: 'Shared conversation not found' });
+      }
+      return SuccessResponse({ res, statusCode: 200, data: conversation });
+    } catch (error) {
+      logger.error('Failed to get shared conversation', { error });
+      return ErrorResponse({ res, statusCode: 500, message: 'Failed to get shared conversation' });
+    }
+  }
+
   static async sendMessage(req: Request, res: Response) {
     const controller = new AbortController();
   

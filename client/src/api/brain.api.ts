@@ -300,3 +300,26 @@ export const getConversation = async (id: string) => {
   const response = await api.get(`/brain/conversation/${id}`);
   return response.data;
 };
+
+export const deleteConversation = async (id: string) => {
+  const response = await api.delete(`/brain/conversation/${id}`);
+  return response.data;
+};
+
+export const shareConversation = async (conversationId: string) => {
+  const response = await api.post(`/brain/conversation/${conversationId}/share`);
+  return response.data;
+};
+
+export const unshareConversation = async (conversationId: string) => {
+  const response = await api.delete(`/brain/conversation/${conversationId}/share`);
+  return response.data;
+};
+
+export const getSharedConversation = async (shareToken: string) => {
+  const response = await fetch(`${API_CONFIG.baseURL}brain/share/${shareToken}`);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  }
+  return response.json();
+};

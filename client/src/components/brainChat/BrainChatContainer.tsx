@@ -1,4 +1,4 @@
-import { Ellipsis, Send, Share, Trash, Square } from "lucide-react";
+import { Ellipsis, Send, Trash, Square, Link } from "lucide-react";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useBrainStore } from "../../stores/brain-store";
@@ -6,15 +6,17 @@ import { ChatSkeleton } from "../skeleton/ChatSkeleton";
 import { MessageBubble } from "../Chat/MessageBubble";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { shareConversation, unshareConversation } from "../../api/brain.api";
 
 export const BrainChatContainer = () => {
   const [showOptions, setShowOptions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
   const { conversationId } = useParams({ strict: false });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const { conversations, fetchConversation, sendMessage, selectConversation } =
+  const { conversations, fetchConversation, sendMessage, selectConversation, deleteConversation } =
     useBrainStore();
   const [message, setMessage] = useState("");
   const conversation = conversations[conversationId || ""];
@@ -58,6 +60,50 @@ export const BrainChatContainer = () => {
     } finally {
       setIsSending(false);
     }
+  };
+
+  const handleDelete = async () => {
+    if (!conversationId || conversationId.startsWith("temp-")) return;
+    if (!window.confirm("Delete this conversation? This cannot be undone.")) return;
+
+    try {
+      await deleteConversation(conversationId);
+      toast.success("Conversation deleted");
+      navigate({ to: "/in/brain" });
+    } catch {
+      toast.error("Failed to delete conversation");
+    }
+    setShowOptions(false);
+  };
+
+  const handleShare = async () => {
+    if (!conversationId || conversationId.startsWith("temp-")) return;
+    setIsSharing(true);
+
+    try {
+      const response = await shareConversation(conversationId);
+      const shareToken = response.data.shareToken;
+      const shareUrl = `${window.location.origin}/share/${shareToken}`;
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Share link copied to clipboard!");
+    } catch {
+      toast.error("Failed to share conversation");
+    } finally {
+      setIsSharing(false);
+      setShowOptions(false);
+    }
+  };
+
+  const handleUnshare = async () => {
+    if (!conversationId || conversationId.startsWith("temp-")) return;
+
+    try {
+      await unshareConversation(conversationId);
+      toast.success("Share link revoked");
+    } catch {
+      toast.error("Failed to revoke share link");
+    }
+    setShowOptions(false);
   };
 
   // Handle direct URL navigation - fetch conversation if not in store
@@ -118,12 +164,19 @@ export const BrainChatContainer = () => {
           <Ellipsis size={20} />
         </button>
         {showOptions && (
-          <div className="flex overflow-hidden flex-col text-black dark:text-white shadow-2xl absolute top-10 right-4 bg-white dark:bg-[#101010] border border-gray-300 dark:border-gray-800 rounded-md">
-            <button className="flex items-center gap-2 px-3 py-1 hover:bg-gray-100 dark:hover:bg-[#1a1a1a] cursor-pointer">
-              <Share size={16} />
-              Share
+          <div className="flex overflow-hidden flex-col text-black dark:text-white shadow-2xl absolute top-10 right-4 bg-white dark:bg-[#101010] border border-gray-300 dark:border-gray-800 rounded-md z-50">
+            <button
+              onClick={handleShare}
+              disabled={isSharing}
+              className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-[#1a1a1a] cursor-pointer disabled:opacity-50 text-sm"
+            >
+              <Link size={16} />
+              {isSharing ? "Copying..." : "Copy Share Link"}
             </button>
-            <button className="flex items-center gap-2 px-3 py-1 hover:bg-gray-100 dark:hover:bg-[#1a1a1a] cursor-pointer">
+            <button
+              onClick={handleDelete}
+              className="flex items-center gap-2 px-3 py-2 hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer text-red-600 dark:text-red-400 text-sm"
+            >
               <Trash size={16} />
               Delete
             </button>

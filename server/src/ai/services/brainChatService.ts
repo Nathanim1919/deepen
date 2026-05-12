@@ -518,11 +518,57 @@ Answer the user's question based on the context above. Remember to cite sources 
 
   /**
    * Delete a brain chat conversation by id and user id
-   * @param conversationId 
-   * @param userId 
    */
   static async deleteConversation(conversationId: string, userId: string): Promise<void> {
     await BrainChatConversation.deleteOne({ _id: new Types.ObjectId(conversationId), userId: new Types.ObjectId(userId) });
+  }
+
+  /**
+   * Share a conversation — generates a public share token (idempotent)
+   */
+  static async shareConversation(conversationId: string, userId: string): Promise<string> {
+    const conversation = await BrainChatConversation.findOne({
+      _id: new Types.ObjectId(conversationId),
+      userId: new Types.ObjectId(userId),
+    });
+
+    if (!conversation) {
+      throw new Error("Conversation not found");
+    }
+
+    // If already shared, return existing token
+    if (conversation.isPublic && conversation.shareToken) {
+      return conversation.shareToken;
+    }
+
+    const { nanoid } = await import("nanoid");
+    const shareToken = nanoid(16);
+
+    conversation.isPublic = true;
+    conversation.shareToken = shareToken;
+    conversation.sharedAt = new Date();
+    await conversation.save();
+
+    return shareToken;
+  }
+
+  /**
+   * Unshare a conversation — revokes the public link
+   */
+  static async unshareConversation(conversationId: string, userId: string): Promise<void> {
+    await BrainChatConversation.updateOne(
+      { _id: new Types.ObjectId(conversationId), userId: new Types.ObjectId(userId) },
+      { $set: { isPublic: false }, $unset: { shareToken: 1, sharedAt: 1 } }
+    );
+  }
+
+  /**
+   * Get a shared conversation by its public token (no auth required)
+   */
+  static async getSharedConversation(shareToken: string): Promise<IBrainChatConversation | null> {
+    return BrainChatConversation.findOne({ shareToken, isPublic: true })
+      .select('title messages createdAt sharedAt')
+      .lean();
   }
 
 
