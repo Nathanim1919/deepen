@@ -31,6 +31,5 @@ export async function sendMessage(
 
 export const listModels = async () => {
   const models = await openRouter.models.list();
-  console.log(":- models -> models :-", models);
   return models;
 };

@@ -74,7 +74,6 @@ export class BrainChatController {
       res.write(`data: ${JSON.stringify({ done: true, conversation })}\n\n`);
       res.end();
     } catch (error) {
-      console.log("...........Error: ", error);
       logger.error("Streaming failed", { error });
       res.write(
         `data: ${JSON.stringify({ error: "Streaming failed" })}\n\n`

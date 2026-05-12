@@ -3,12 +3,13 @@ import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import DOMPurify from 'dompurify';
-// import { ClipboardIcon, ChevronRightIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import type { MessageSource } from '../stores/brain-store';
 
 type LLMRendererProps = {
   markdown: string | null;
   className?: string;
   onQuestionClick?: (question: string) => void;
+  sources?: MessageSource[];
   isLoading?: boolean;
   error?: string | null;
 };
@@ -19,6 +20,7 @@ export const LLMRenderer: React.FC<LLMRendererProps> = ({
   markdown,
   className = '',
   onQuestionClick,
+  sources,
   isLoading = false,
   error = null,
 }) => {
@@ -49,10 +51,12 @@ export const LLMRenderer: React.FC<LLMRendererProps> = ({
 
   // Enhanced follow-up questions extraction
   const extractFollowUpQuestions = (input: string): string[] => {
+    // Match various heading formats for follow-up questions, capturing everything until next heading or end
     const patterns = [
-      /## Follow-Up Questions\n\n([\s\S]*?)(?=\n## |\n$)/i,
-      /## Suggested Questions\n\n([\s\S]*?)(?=\n## |\n$)/i,
-      /## You Might Ask\n\n([\s\S]*?)(?=\n## |\n$)/i,
+      /##\s*Follow[\s-]*Up\s*Questions?\s*\n+([\s\S]*?)(?=\n##\s|$)/i,
+      /##\s*Suggested\s*Questions?\s*\n+([\s\S]*?)(?=\n##\s|$)/i,
+      /##\s*You\s*Might\s*(?:Also\s*)?Ask\s*\n+([\s\S]*?)(?=\n##\s|$)/i,
+      /##\s*What.*(?:explore|ask|wonder)\s*\n+([\s\S]*?)(?=\n##\s|$)/i,
     ];
 
     for (const pattern of patterns) {
@@ -60,20 +64,98 @@ export const LLMRenderer: React.FC<LLMRendererProps> = ({
       if (followUpSection) {
         return followUpSection[1]
           .split('\n')
-          .filter(line => line.trim().match(/^[-*•]?\s*(.+?)\s*$/))
-          .map(line => line.replace(/^[-*•]\s*/, '').trim())
-          .filter(q => q.length > 0);
+          .map(line => line.trim())
+          .filter(line => line.length > 0)
+          .map(line => line.replace(/^[-*•\d.]+\s*/, '').trim())
+          .filter(q => q.length > 5); // Filter out very short/empty lines
       }
     }
     return [];
   };
 
+  // Build a map of citation number → source for inline citation links
+  const uniqueSourcesByDocId = React.useMemo(() => {
+    if (!sources || sources.length === 0) return [];
+    const seen = new Set<string>();
+    return sources.filter(s => {
+      if (seen.has(s.docId)) return false;
+      seen.add(s.docId);
+      return true;
+    });
+  }, [sources]);
+
+  // Citation placeholder token — prevents ReactMarkdown from parsing [1] as link syntax
+  const CITE_TOKEN = '%%CITE:';
+  const CITE_END = '%%';
+
+  // Preprocess: convert [1], [2] etc. to safe tokens before ReactMarkdown parses them
+  const preprocessCitations = (text: string): string => {
+    if (uniqueSourcesByDocId.length === 0) return text;
+    return text.replace(/\[(\d+)\]/g, (match, num) => {
+      const idx = parseInt(num, 10) - 1;
+      if (idx >= 0 && idx < uniqueSourcesByDocId.length) {
+        return `${CITE_TOKEN}${num}${CITE_END}`;
+      }
+      return match;
+    });
+  };
+
+  // Render citation tokens as clickable badge links
+  const renderWithCitations = (text: string): React.ReactNode[] => {
+    if (uniqueSourcesByDocId.length === 0 || !text.includes(CITE_TOKEN)) return [text];
+
+    const parts: React.ReactNode[] = [];
+    const regex = new RegExp(`${CITE_TOKEN.replace(/%/g, '\\%')}(\\d+)${CITE_END.replace(/%/g, '\\%')}`, 'g');
+    let lastIndex = 0;
+    let match;
+
+    while ((match = regex.exec(text)) !== null) {
+      const num = parseInt(match[1], 10);
+      const source = uniqueSourcesByDocId[num - 1];
+
+      if (match.index > lastIndex) {
+        parts.push(text.slice(lastIndex, match.index));
+      }
+
+      if (source) {
+        parts.push(
+          <a
+            key={`cite-${match.index}`}
+            href={`/in/captures/${source.docId}`}
+            className="inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800/60 transition-colors no-underline mx-0.5 align-super"
+            title={source.preview || `Source ${num}`}
+          >
+            {num}
+          </a>
+        );
+      } else {
+        parts.push(`[${num}]`);
+      }
+
+      lastIndex = match.index + match[0].length;
+    }
+
+    if (lastIndex < text.length) {
+      parts.push(text.slice(lastIndex));
+    }
+
+    return parts.length > 0 ? parts : [text];
+  };
+
   const sanitizedMarkdown = preprocessMarkdown(markdown);
   const followUpQuestions = extractFollowUpQuestions(sanitizedMarkdown);
   const markdownWithoutQuestions = sanitizedMarkdown.replace(
-    /## (Follow-Up|Suggested|You Might Ask) Questions?\n\n([\s\S]*?)(?=\n## |\n$)/gi,
+    /##\s*(?:Follow[\s-]*Up|Suggested|You\s*Might\s*(?:Also\s*)?Ask|What.*(?:explore|ask|wonder))\s*Questions?\s*\n+([\s\S]*?)(?=\n##\s|$)/gi,
     ''
   );
+  // Convert citation brackets to safe tokens before ReactMarkdown
+  const markdownForRendering = preprocessCitations(markdownWithoutQuestions);
+
+  // Helper to process children — replaces citation tokens in any text nodes
+  const citify = (children: React.ReactNode): React.ReactNode =>
+    React.Children.map(children, child =>
+      typeof child === 'string' ? renderWithCitations(child) : child
+    );
 
   // Loading skeleton
   if (isLoading) {
@@ -131,7 +213,7 @@ export const LLMRenderer: React.FC<LLMRendererProps> = ({
               id={node?.position?.start?.line?.toString()}
               className="text-3xl font-bold text-gray-900 dark:text-gray-50 mt-8 mb-6 scroll-mt-24 tracking-tight"
             >
-              {children}
+              {citify(children)}
             </h1>
           ),
           h2: ({ children, node }) => (
@@ -139,7 +221,7 @@ export const LLMRenderer: React.FC<LLMRendererProps> = ({
               id={node?.position?.start.line.toString()}
               className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mt-7 mb-5 scroll-mt-24 tracking-tight border-b border-gray-100 dark:border-gray-800 pb-2"
             >
-              {children}
+              {citify(children)}
             </h2>
           ),
           h3: ({ children, node }) => (
@@ -147,39 +229,41 @@ export const LLMRenderer: React.FC<LLMRendererProps> = ({
               id={node?.position?.start.line.toString()}
               className="text-xl font-medium text-gray-700 dark:text-gray-200 mt-6 mb-4 scroll-mt-24"
             >
-              {children}
+              {citify(children)}
             </h3>
           ),
           h4: ({ children }) => (
             <h4 className="text-lg font-medium text-gray-600 dark:text-gray-300 mt-5 mb-3">
-              {children}
+              {citify(children)}
             </h4>
           ),
           h5: ({ children }) => (
             <h5 className="text-base font-medium text-gray-600 dark:text-gray-400 mt-4 mb-2">
-              {children}
+              {citify(children)}
             </h5>
           ),
           h6: ({ children }) => (
             <h6 className="text-sm font-medium text-gray-500 dark:text-gray-500 mt-3 mb-2 uppercase tracking-wider">
-              {children}
+              {citify(children)}
             </h6>
           ),
-          
-          // Paragraph with optimized readability
+
+          // Paragraph with optimized readability + inline citation rendering
           p: ({ children }) => (
             <p className=" leading-relaxed text-gray-700 dark:text-gray-300 text-[16px]">
-              {children}
+              {citify(children)}
             </p>
           ),
-          
-          // Emphasis and strong
+
+          // Emphasis and strong (with citation rendering)
           em: ({ children }) => (
-            <em className="italic text-gray-600 dark:text-gray-400">{children}</em>
+            <em className="italic text-gray-600 dark:text-gray-400">
+              {citify(children)}
+            </em>
           ),
           strong: ({ children }) => (
             <strong className="font-semibold text-gray-900 dark:text-gray-200">
-              {children}
+              {citify(children)}
             </strong>
           ),
           
@@ -208,7 +292,7 @@ export const LLMRenderer: React.FC<LLMRendererProps> = ({
           ),
           li: ({ children }) => (
             <li className="pl-2 text-gray-700 dark:text-gray-300">
-              {children}
+              {citify(children)}
             </li>
           ),
           
@@ -326,7 +410,7 @@ export const LLMRenderer: React.FC<LLMRendererProps> = ({
           ),
         }}
       >
-        {markdownWithoutQuestions}
+        {markdownForRendering}
       </ReactMarkdown>
 
       {followUpQuestions.length > 0 && (

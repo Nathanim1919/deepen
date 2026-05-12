@@ -8,9 +8,10 @@ interface MessageBubbleProps {
   role: "user" | "assistant";
   content: string;
   sources?: MessageSource[];
+  onQuestionClick?: (question: string) => void;
 }
 
-export const MessageBubble = ({ role, content, sources }: MessageBubbleProps) => {
+export const MessageBubble = ({ role, content, sources, onQuestionClick }: MessageBubbleProps) => {
   const isUser = role === "user";
 
   return (
@@ -56,7 +57,7 @@ export const MessageBubble = ({ role, content, sources }: MessageBubbleProps) =>
                 : "bg-transparent text-gray-800 dark:text-gray-200 w-full pl-0 pt-0" // Assistant looks like a document
               }`}
           >
-            <LLMRenderer markdown={content} />
+            <LLMRenderer markdown={content} sources={sources} onQuestionClick={onQuestionClick} />
             
             {/* Sources (only for assistant messages) */}
             {!isUser && sources && sources.length > 0 && (

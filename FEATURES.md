@@ -11,8 +11,8 @@ Planned features for Deepen, tracked here so we can tackle them one by one.
 ## AI & Brain Chat
 - [x] Auto-categorization of new captures using AI
 - [ ] Conversation sharing/export
-- [ ] Follow-up suggestions after AI responses
-- [ ] Citation linking (click source reference → jump to original capture)
+- [x] Follow-up suggestions after AI responses
+- [x] Citation linking (click source reference → jump to original capture)
 
 ## Search & Discovery
 - [ ] Full-text search with filters (date range, source, format, collection)

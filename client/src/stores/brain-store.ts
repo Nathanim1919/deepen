@@ -190,7 +190,7 @@ type BrainStore = {
 
   startConversation: (initialMessage: string, tempId?: string) => Promise<void>;
   fetchConversations: () => Promise<void>;
-  fetchConversation: (id: string) => Promise<void | null>; // Fetch full conversation with messages
+  fetchConversation: (id: string) => Promise<Conversation | null>; // Fetch full conversation with messages
   sendMessage: (content: string) => Promise<void>;
   selectConversation: (id: string) => void;
 
@@ -384,78 +384,104 @@ export const useBrainStore = create<BrainStore>((set, get) => ({
       draft: EMPTY_DRAFT,
     }));
   
+    // Track sources received during streaming so we can merge them later
+    let streamedSources: MessageSource[] | undefined;
+
     try {
       const serverConversation = await startConversationStream(
         conversation,
         (delta) => {
-          // Real-time updates for streaming tokens (if backend streams)
+          // Real-time updates for streaming tokens
           set((state) => {
             const convo = state.conversations[conversationId];
             if (!convo) return state;
 
-            let assistantMessage = convo.messages.find(
+            const existingAssistant = convo.messages.find(
               (m) => m.role === "assistant"
             );
 
-            if (!assistantMessage) {
-              assistantMessage = {
-                id: nanoid(),
-                role: "assistant",
-                content: "",
-                createdAt: Date.now(),
-                status: "sent",
+            if (!existingAssistant) {
+              return {
+                conversations: {
+                  ...state.conversations,
+                  [conversationId]: {
+                    ...convo,
+                    messages: [
+                      ...convo.messages,
+                      {
+                        id: nanoid(),
+                        role: "assistant" as const,
+                        content: delta,
+                        createdAt: Date.now(),
+                        status: "sending" as const,
+                      },
+                    ],
+                  },
+                },
               };
-              convo.messages.push(assistantMessage);
             }
-
-            assistantMessage.content += delta;
 
             return {
               conversations: {
                 ...state.conversations,
-                [conversationId]: convo,
+                [conversationId]: {
+                  ...convo,
+                  messages: convo.messages.map((msg) =>
+                    msg.role === "assistant"
+                      ? { ...msg, content: msg.content + delta }
+                      : msg
+                  ),
+                },
               },
             };
           });
         },
-        (usage) => {
-          console.log('usage', usage);
-        },
+        undefined, // usage
         (sources) => {
-          // Update the assistant message with sources when they arrive
+          // Save sources so we can merge them into the final conversation
+          streamedSources = sources;
           set((state) => {
             const convo = state.conversations[conversationId];
             if (!convo) return state;
 
-            const assistantMessage = convo.messages.find(
-              (m) => m.role === "assistant"
-            );
-
-            if (assistantMessage) {
-              assistantMessage.sources = sources;
-            }
-
             return {
               conversations: {
                 ...state.conversations,
-                [conversationId]: { ...convo },
+                [conversationId]: {
+                  ...convo,
+                  messages: convo.messages.map((msg) =>
+                    msg.role === "assistant"
+                      ? { ...msg, sources }
+                      : msg
+                  ),
+                },
               },
             };
           });
         }
       );
 
-      // Replace optimistic conversation with server response
+      // Replace optimistic conversation with server response, preserving sources
       set((state) => {
-        // Remove the temporary conversation
         const { [conversationId]: _, ...conversationsWithoutTemp } = state.conversations;
+
+        // Merge streamed sources into server conversation messages
+        const finalConversation = {
+          ...serverConversation,
+          messages: serverConversation.messages.map((msg) => {
+            if (msg.role === "assistant" && !msg.sources && streamedSources) {
+              return { ...msg, sources: streamedSources };
+            }
+            return msg;
+          }),
+        };
 
         return {
           conversations: {
             ...conversationsWithoutTemp,
-            [serverConversation.id]: serverConversation,
+            [finalConversation.id]: finalConversation,
           },
-          activeConversationId: serverConversation.id,
+          activeConversationId: finalConversation.id,
         };
       });
 
@@ -510,80 +536,72 @@ export const useBrainStore = create<BrainStore>((set, get) => ({
       }
     }));
 
+    let streamedSources: MessageSource[] | undefined;
+
     try {
       await sendMessageApi(convo, content,
         (delta: string) => {
-          // Real-time updates for streaming tokens
           set((state) => {
             const currentConvo = state.conversations[id];
             if (!currentConvo) return state;
 
-            let assistantMessage = currentConvo.messages.find(
+            const existingAssistant = currentConvo.messages.find(
               (m) => m.role === "assistant" && m.status === 'sending'
             );
 
-            if (!assistantMessage) {
-              // Create new assistant message for streaming
-              const newMessages = [
-                ...currentConvo.messages,
-                {
-                  id: nanoid(),
-                  role: "assistant" as const,
-                  content: delta,
-                  createdAt: Date.now(),
-                  status: "sending" as const,
-                }
-              ];
+            if (!existingAssistant) {
               return {
                 conversations: {
                   ...state.conversations,
                   [id]: {
                     ...currentConvo,
-                    messages: newMessages,
+                    messages: [
+                      ...currentConvo.messages,
+                      {
+                        id: nanoid(),
+                        role: "assistant" as const,
+                        content: delta,
+                        createdAt: Date.now(),
+                        status: "sending" as const,
+                      },
+                    ],
                   },
                 },
               };
             }
 
-            // Append delta to existing assistant message
-            const updatedMessages = currentConvo.messages.map((msg) =>
-              msg.id === assistantMessage!.id
-                ? { ...msg, content: msg.content + delta }
-                : msg
-            );
-
             return {
               conversations: {
                 ...state.conversations,
                 [id]: {
                   ...currentConvo,
-                  messages: updatedMessages,
+                  messages: currentConvo.messages.map((msg) =>
+                    msg.id === existingAssistant.id
+                      ? { ...msg, content: msg.content + delta }
+                      : msg
+                  ),
                 },
               },
             };
           });
         },
-        (usage: any) => {
-          console.log('usage', usage);
-        },
+        undefined, // usage
         (sources) => {
-          // Update the current assistant message with sources
+          streamedSources = sources;
           set((state) => {
             const currentConvo = state.conversations[id];
             if (!currentConvo) return state;
-
-            const updatedMessages = currentConvo.messages.map((msg) =>
-              msg.role === "assistant" && msg.status === 'sending'
-                ? { ...msg, sources }
-                : msg
-            );
 
             return {
               conversations: {
                 ...state.conversations,
                 [id]: {
                   ...currentConvo,
-                  messages: updatedMessages,
+                  messages: currentConvo.messages.map((msg) =>
+                    msg.role === "assistant" && msg.status === 'sending'
+                      ? { ...msg, sources }
+                      : msg
+                  ),
                 },
               },
             };
@@ -591,23 +609,21 @@ export const useBrainStore = create<BrainStore>((set, get) => ({
         }
       );
 
-      // After stream completes, mark assistant message as sent
+      // Mark assistant message as sent, preserving sources
       set((state) => {
         const currentConvo = state.conversations[id];
         if (!currentConvo) return state;
-
-        const updatedMessages = currentConvo.messages.map((msg) =>
-          msg.role === "assistant" && msg.status === 'sending'
-            ? { ...msg, status: "sent" as const }
-            : msg
-        );
 
         return {
           conversations: {
             ...state.conversations,
             [id]: {
               ...currentConvo,
-              messages: updatedMessages,
+              messages: currentConvo.messages.map((msg) =>
+                msg.role === "assistant" && msg.status === 'sending'
+                  ? { ...msg, status: "sent" as const, sources: msg.sources || streamedSources }
+                  : msg
+              ),
             },
           },
         };
@@ -619,7 +635,6 @@ export const useBrainStore = create<BrainStore>((set, get) => ({
 
   fetchConversations: async (): Promise<void> => {
     const response = await getConversations();
-    console.log("conversations response", response);
 
     // Convert array to metadata objects keyed by _id
     const conversationListById = response.data.reduce((acc: Record<string, ConversationMetadata>, conv: any) => {
@@ -642,19 +657,27 @@ export const useBrainStore = create<BrainStore>((set, get) => ({
     set({ conversationList: conversationListById });
   },
 
-  fetchConversation: async (id: string): Promise<void | null> => {
+  fetchConversation: async (id: string): Promise<Conversation | null> => {
     try {
       const response = await getConversation(id);
 
-      // Map server response to our format
-      const serverConversation = {
-        ...response.data,
-        id: response?.data?._id || response?.data?.id
-      };
-
-      if (!serverConversation){
+      if (!response?.data) {
         return null;
       }
+
+      // Map server response to our format
+      const serverConversation: Conversation = {
+        ...response.data,
+        id: response.data._id || response.data.id,
+        messages: (response.data.messages || []).map((msg: any) => ({
+          id: msg.id,
+          role: msg.role,
+          content: msg.content,
+          createdAt: msg.timestamp ? new Date(msg.timestamp).getTime() : (msg.createdAt || Date.now()),
+          status: msg.status === 'received' ? 'sent' : (msg.status || 'sent'),
+          sources: msg.sources,
+        })),
+      };
 
       set(state => ({
         conversations: {
@@ -662,8 +685,11 @@ export const useBrainStore = create<BrainStore>((set, get) => ({
           [serverConversation.id]: serverConversation
         }
       }));
+
+      return serverConversation;
     } catch (error) {
       console.error('Failed to fetch conversation:', error);
+      return null;
     }
   },
 

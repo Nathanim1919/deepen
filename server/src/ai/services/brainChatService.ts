@@ -34,7 +34,10 @@ Your personality:
 - You reason carefully using the user's saved content as your primary source
 - You're honest when you don't know something or can't find it in the user's knowledge base
 - You give concise, well-structured answers using markdown formatting
-- You proactively suggest follow-up questions or related topics the user might explore
+
+When source documents are provided with numbered labels like [1], [2], etc., you MUST cite them inline in your response using those same numbers. For example: "According to your saved article [1], the key factors are..." or "This aligns with findings from [2]."
+
+At the end of every response, include a section titled exactly "## Follow-Up Questions" with 2-3 bullet points of suggested questions the user might want to explore next, based on the conversation context and their knowledge base.
 
 You have access to the user's captured knowledge through semantic search. When context is provided, prioritize it. When no relevant context is found, be transparent about it but still try to be helpful.`;
 
@@ -156,14 +159,22 @@ export class BrainChatService {
 
       // Step 3: Format the results into a context string
       const formattedContext = this.formatContextForLLM(searchResults, contextDescription);
-      
+
       // Step 4: Convert search results to MessageSource format for tracking
-      const sources: MessageSource[] = searchResults.map(r => ({
-        docId: r.docId,
-        score: r.score,
-        chunkIndex: r.chunkIndex,
-        preview: r.text.slice(0, 100) + (r.text.length > 100 ? '...' : ''),
-      }));
+      // Deduplicate by docId (keep highest score) to match the numbered [1], [2] order in the prompt
+      const sourcesByDocId = new Map<string, MessageSource>();
+      for (const r of searchResults) {
+        const existing = sourcesByDocId.get(r.docId);
+        if (!existing || existing.score < r.score) {
+          sourcesByDocId.set(r.docId, {
+            docId: r.docId,
+            score: r.score,
+            chunkIndex: r.chunkIndex,
+            preview: r.text.slice(0, 100) + (r.text.length > 100 ? '...' : ''),
+          });
+        }
+      }
+      const sources: MessageSource[] = Array.from(sourcesByDocId.values());
 
       return {
         systemPrompt: formattedContext,
@@ -187,31 +198,33 @@ export class BrainChatService {
   private static formatContextForLLM(results: RAGSearchResult[], description: string): string {
     // Group chunks by document for better readability
     const chunksByDoc = new Map<string, RAGSearchResult[]>();
-    
+
     for (const result of results) {
       const existing = chunksByDoc.get(result.docId) || [];
       existing.push(result);
       chunksByDoc.set(result.docId, existing);
     }
 
-    // Build the context string
-    let contextParts: string[] = [];
-    
-    for (const [docId, chunks] of chunksByDoc) {
+    // Build the context string with numbered sources
+    const contextParts: string[] = [];
+    let sourceIndex = 1;
+
+    for (const [_docId, chunks] of chunksByDoc) {
       // Sort chunks by their original position in the document
       chunks.sort((a, b) => a.chunkIndex - b.chunkIndex);
-      
+
       // Join the chunk texts
       const docContent = chunks.map(c => c.text).join("\n\n");
-      
-      contextParts.push(`--- Source: Document ${docId.slice(-6)} ---\n${docContent}`);
+
+      contextParts.push(`[${sourceIndex}] Source:\n${docContent}`);
+      sourceIndex++;
     }
 
     const allContext = contextParts.join("\n\n");
 
     return `${DEEPEN_PERSONALITY}
 
-The user is asking questions about ${description}. Below is relevant content retrieved from their saved documents. Use this information to answer their questions accurately. If the answer isn't in the provided context, say so honestly — but you can still reason and offer helpful related insights.
+The user is asking questions about ${description}. Below is relevant content retrieved from their saved documents, numbered [1], [2], etc. Use this information to answer their questions accurately and cite sources using their numbers. If the answer isn't in the provided context, say so honestly — but you can still reason and offer helpful related insights.
 
 === RELEVANT CONTEXT ===
 
@@ -219,7 +232,7 @@ ${allContext}
 
 === END OF CONTEXT ===
 
-Answer the user's question based on the context above.`;
+Answer the user's question based on the context above. Remember to cite sources inline using [1], [2], etc.`;
   }
 
   /**

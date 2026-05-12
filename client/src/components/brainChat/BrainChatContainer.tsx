@@ -26,6 +26,14 @@ export const BrainChatContainer = () => {
     ) ?? false;
   }, [conversation?.messages]);
 
+  // Detect if we're waiting for the first AI response (user sent message, no assistant reply yet)
+  const isWaitingForResponse = useMemo(() => {
+    if (!conversation?.messages.length) return false;
+    const hasUserMessage = conversation.messages.some(m => m.role === "user");
+    const hasAssistantMessage = conversation.messages.some(m => m.role === "assistant");
+    return hasUserMessage && !hasAssistantMessage;
+  }, [conversation?.messages]);
+
   const navigate = useNavigate();
 
   // Auto-scroll to bottom when messages change
@@ -130,20 +138,42 @@ export const BrainChatContainer = () => {
           <ChatSkeleton />
         ) : (
           <>
-            {conversation?.messages.map((item) => (
-              <div
-                key={item.id}
-                className={`flex ${item.role === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <MessageBubble
-                  role={item.role as "user" | "assistant"}
-                  content={item.content}
-                  sources={item.sources}
-                />
-              </div>
-            ))}
+            {conversation?.messages.map((item, index) => {
+              // Only show follow-up question chips on the last assistant message
+              const isLastAssistant =
+                item.role === "assistant" &&
+                index === conversation.messages.map(m => m.role).lastIndexOf("assistant");
+
+              return (
+                <div
+                  key={item.id}
+                  className={`flex ${item.role === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  <MessageBubble
+                    role={item.role as "user" | "assistant"}
+                    content={item.content}
+                    sources={item.sources}
+                    onQuestionClick={
+                      isLastAssistant && !isSending && !isStreaming
+                        ? (question: string) => {
+                            setMessage(question);
+                            // Auto-send after a brief moment so the user sees it
+                            setTimeout(() => {
+                              setMessage("");
+                              setIsSending(true);
+                              sendMessage(question)
+                                .catch((err) => console.error("Follow-up send failed:", err))
+                                .finally(() => setIsSending(false));
+                            }, 100);
+                          }
+                        : undefined
+                    }
+                  />
+                </div>
+              );
+            })}
             {/* Thinking indicator while waiting for first streaming token */}
-            {isSending && !isStreaming && (
+            {(isWaitingForResponse || (isSending && !isStreaming)) && (
               <motion.div
                 className="flex items-center gap-3 py-4 pl-12"
                 initial={{ opacity: 0 }}
