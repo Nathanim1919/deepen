@@ -1,72 +1,99 @@
-export const TestimonialsPage = () => {
-  const testimonials = [
-    {
-      quote: "Deepen helped me untangle my thoughts. Now I don't just save ideas, I grow them.",
-      author: "@mindarchitect (Cognitive Scientist)",
-      highlight: false
-    },
-    {
-      quote: "I've used Notion. I've used Evernote. But Deepen thinks with me, not just for me.",
-      author: "Ava R., UX Strategist",
-      highlight: true
-    },
-    {
-      quote: "From brainstorming to breakthroughs—Deepen became my second brain.",
-      author: "Jae, Startup Founder",
-      highlight: false
-    },
-    {
-      quote: "Minimalism with meaning. Deepen lets me focus without friction.",
-      author: "anonymous (Digital Minimalist)",
-      highlight: false
-    },
-    {
-      quote: "Feels like my thoughts finally have a home. And it's beautiful.",
-      author: "Leni, Educator & Coach",
-      highlight: true
-    },
-  ];
+import { motion } from "framer-motion";
 
+const testimonials = [
+  {
+    quote: "I switched from Notion for bookmarking and it just clicks. Simple, fast, does what I need.",
+    author: "Ava R.",
+    role: "UX Strategist",
+    initials: "AR",
+  },
+  {
+    quote: "Brain Chat is the feature that sold me. I can actually talk to my saved articles.",
+    author: "Jae",
+    role: "Startup Founder",
+    initials: "JK",
+  },
+  {
+    quote: "Finally a tool that doesn't try to do everything. It captures, it organizes, it works.",
+    author: "Leni",
+    role: "Educator",
+    initials: "LT",
+  },
+];
+
+export const TestimonialsPage = () => {
   return (
-    <section className="min-h-screen text-gray-900 dark:text-white p-6 bg-white dark:bg-black">
-      <div className="max-w-6xl mx-auto">
-        {/* Header with Material Design typography */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-normal tracking-tight text-gray-900 dark:text-white mb-4">
-            What People Are Saying
+    <section className="text-gray-900 dark:text-white py-24 px-6 bg-gray-50/80 dark:bg-white/[0.02]">
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <motion.div
+          className="text-center mb-14"
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
+          <p className="text-sm font-semibold text-gray-400 dark:text-gray-500 tracking-wider uppercase mb-3">
+            Testimonials
+          </p>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">
+            What early users are saying
           </h2>
-          <div className="w-24 h-1 bg-blue-500 dark:bg-violet-400 mx-auto mb-6"></div>
-          <p className="text-xl text-gray-600 dark:text-gray-400 font-light max-w-2xl mx-auto">
+          <p className="text-lg text-gray-500 dark:text-gray-400 max-w-lg mx-auto">
             Feedback from real minds using Deepen
           </p>
-        </div>
+        </motion.div>
 
         {/* Testimonials Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {testimonials.map((t, idx) => (
-            <div 
+            <motion.div
               key={idx}
-              className={`rounded-xl p-6 transition-all duration-300 border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-transparent`}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.08, duration: 0.5 }}
+              className="rounded-2xl p-6 border border-gray-100 dark:border-white/5 bg-white dark:bg-white/[0.02] hover:shadow-lg hover:shadow-gray-100/50 dark:hover:shadow-none hover:border-gray-200 dark:hover:border-white/10 transition-all duration-300 flex flex-col justify-between"
             >
-              <div className={`text-5xl mb-4 ${t.highlight ? "text-blue-500 dark:text-violet-300" : "text-gray-300 dark:text-gray-500"}`}>
-                "
+              <p className="text-base text-gray-700 dark:text-gray-200 mb-6 leading-relaxed">
+                "{t.quote}"
+              </p>
+
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-white/10 flex items-center justify-center text-gray-600 dark:text-gray-300 text-sm font-semibold flex-shrink-0">
+                  {t.initials}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                    {t.author}
+                  </p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                    {t.role}
+                  </p>
+                </div>
               </div>
-              <p className="text-lg text-gray-800 dark:text-gray-100 mb-6 font-light leading-relaxed">
-                {t.quote}
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
-                — {t.author}
-              </p>
-            </div>
+            </motion.div>
           ))}
         </div>
 
-        {/* Material Design footer */}
-        <div className="mt-20 pt-8 border-t border-gray-200 dark:border-gray-700 text-center">
-          <p className="text-gray-500 text-sm">
-            Want to share your experience? <span className="text-blue-600 dark:text-violet-400 hover:text-blue-500 dark:hover:text-violet-300 cursor-pointer transition-colors">Leave feedback</span>
+        {/* Footer */}
+        <motion.div
+          className="mt-14 text-center"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.3 }}
+        >
+          <p className="text-sm text-gray-400 dark:text-gray-500">
+            Want to share your experience?{" "}
+            <a
+              href="/feedback"
+              className="text-blue-600 dark:text-violet-400 hover:text-blue-500 dark:hover:text-violet-300 font-medium transition-colors"
+            >
+              Leave feedback
+            </a>
           </p>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

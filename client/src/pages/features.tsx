@@ -138,7 +138,7 @@ export const Features: React.FC = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-        
+
           <h2 className="text-5xl md:text-7xl font-bold">
             What can you do<br /> with{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-400 dark:from-blue-400 dark:to-violet-400">

@@ -5,8 +5,8 @@
   "description": "Capture and save web content as structured Markdown to your Deepen knowledge library.",
   "author": "Nathanim tadele",
   "scripts": {
-    "dev": "plasmo dev",
-    "build": "plasmo build",
+    "dev": "node api.js && plasmo dev",
+    "build": "node api.js && plasmo build",
     "package": "plasmo package"
   },
   "dependencies": {
