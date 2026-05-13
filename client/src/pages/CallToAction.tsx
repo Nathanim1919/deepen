@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 
 export const CallToAction = () => {
   return (
-    <motion.section 
+    <motion.section
       className="relative overflow-hidden -mt-12 md:mt-0 md:py-8 px-6 bg-white dark:bg-[#000000]"
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
@@ -13,7 +13,7 @@ export const CallToAction = () => {
     >
       {/* Apple-style subtle noise texture */}
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjAyIiBudW1PY3RhdmVzPSI1IiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ic2F0dXJhdGUiIHZhbHVlcz0iMCIvPjwvc3ZnPg==')] opacity-[0.05] dark:opacity-[0.02] pointer-events-none" />
-      
+
       {/* Precise gradient elements */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute top-[20%] left-[15%] w-[400px] h-[400px] bg-gradient-to-br from-blue-200/40 dark:from-violet-900/5 to-transparent rounded-full blur-[120px]" />
@@ -22,11 +22,11 @@ export const CallToAction = () => {
 
       <div className="max-w-4xl mx-auto text-center relative">
         {/* Headline with Apple's typographic precision */}
-        <motion.h2 
+        <motion.h2
           className="text-5xl md:text-6xl font-semibold mb-6 leading-[1.1] tracking-tight"
           initial={{ y: 20, opacity: 0 }}
           whileInView={{ y: 0, opacity: 1 }}
-          transition={{ 
+          transition={{
             delay: 0.1,
             type: "spring",
             stiffness: 100,
@@ -34,18 +34,18 @@ export const CallToAction = () => {
           }}
           viewport={{ once: true }}
         >
-          <span 
+          <span
            className="bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-blue-600 to-gray-900 dark:from-white dark:via-[#efff12] dark:to-white/80">
             Capture ideas.<br />like never before.
           </span>
         </motion.h2>
 
         {/* Subtext with perfect line height */}
-        <motion.p 
+        <motion.p
           className="text-xl text-gray-600 dark:text-white/60 mb-10 max-w-lg mx-auto leading-[1.6]"
           initial={{ y: 10, opacity: 0 }}
           whileInView={{ y: 0, opacity: 1 }}
-          transition={{ 
+          transition={{
             delay: 0.2,
             type: "spring",
             stiffness: 100,
@@ -58,15 +58,15 @@ export const CallToAction = () => {
         </motion.p>
 
         {/* Buttons with tactile feel */}
-        {/* <motion.div 
+        {/* <motion.div
           className="flex flex-col sm:flex-row justify-center gap-3"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
           viewport={{ once: true }}
         >
-          <motion.div 
-            whileHover={{ scale: 1.03 }} 
+          <motion.div
+            whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.98 }}
             transition={{ type: "spring", stiffness: 400, damping: 10 }}
           >
@@ -79,8 +79,8 @@ export const CallToAction = () => {
               <FiArrowUpRight className="ml-1 text-gray-500 group-hover:text-gray-700 transition-colors" />
             </Link>
           </motion.div>
-          <motion.div 
-            whileHover={{ scale: 1.03 }} 
+          <motion.div
+            whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.98 }}
             transition={{ type: "spring", stiffness: 400, damping: 10 }}
           >
@@ -103,7 +103,7 @@ export const CallToAction = () => {
                         </motion.button>
 
         {/* Microcopy with perfect tracking */}
-        <motion.p 
+        <motion.p
           className="mt-8 text-sm text-gray-500 dark:text-white/40 tracking-wide"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}

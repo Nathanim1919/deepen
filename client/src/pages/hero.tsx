@@ -2,7 +2,6 @@ import { motion } from "framer-motion";
 import Image from "../assets/img1.png";
 import LightImage from "../assets/img2.png";
 import { CallToAction } from "./CallToAction";
-import { Features } from "./features";
 import { TestimonialsPage } from "./TestimonialsPage";
 
 const HeroPage = () => {
@@ -84,7 +83,6 @@ const HeroPage = () => {
         </div>
       </div>
       <CallToAction />
-      <Features />
       <TestimonialsPage />
     </>
   );
