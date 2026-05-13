@@ -25,7 +25,7 @@ import { BookMarkLayout } from "./layout/BookmarkLayout";
 import FeedbackHub from "./pages/FeedbackHub";
 import { FolderNotes } from "./components/FolderNotes";
 import { SourceNotes } from "./components/SourceNotes";
-import { Manifesto } from "./pages/manifesto";
+// import { Manifesto } from "./pages/manifesto";
 import Waitlist from "./pages/Waitlist";
 import ConversationList from "./components/panels/conversationList";
 import { BrainChatContainer } from "./components/brainChat/BrainChatContainer";
@@ -90,11 +90,11 @@ const waitlistRoute = createRoute({
   component: Waitlist, // Assuming this is the same as HeroPage for now
 });
 
-const ManifestoRoute = createRoute({
-  getParentRoute: () => publicRoute,
-  path: "manifesto",
-  component: Manifesto,
-});
+// const ManifestoRoute = createRoute({
+//   getParentRoute: () => publicRoute,
+//   path: "manifesto",
+//   component: Manifesto,
+// });
 
 const PricingRoute = createRoute({
   getParentRoute: () => publicRoute,
@@ -273,7 +273,7 @@ export const routeTree = rootRoute.addChildren([
   publicRoute.addChildren([
     heroRoute,
     PricingRoute,
-    ManifestoRoute,
+    // ManifestoRoute,
     // FeaturesRoute,
     FAQRoute,
     FeedbackRoute,
